@@ -1,0 +1,6 @@
+domain: quipper.github.io
+layout:
+- go.kubebuilder.io/v3
+projectName: google-cloud-pubsub-operator
+repo: github.com/quipper/google-cloud-pubsub-operator
+version: "3"
