@@ -5,24 +5,26 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/docker.yaml
-      - Dockerfile
-      - go.*
-      - main.go
-      - api/**
-      - controllers/**
-      - pkg/**
+      - TODO_remove_this
+      # - .github/workflows/docker.yaml
+      # - Dockerfile
+      # - go.*
+      # - main.go
+      # - api/**
+      # - controllers/**
+      # - pkg/**
     tags:
       - v*
   pull_request:
     paths:
-      - .github/workflows/docker.yaml
-      - Dockerfile
-      - go.*
-      - main.go
-      - api/**
-      - controllers/**
-      - pkg/**
+      - TODO_remove_this
+      # - .github/workflows/docker.yaml
+      # - Dockerfile
+      # - go.*
+      # - main.go
+      # - api/**
+      # - controllers/**
+      # - pkg/**
 
 jobs:
   build:
@@ -70,15 +72,15 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           flavor: latest=false # get single tag
-      # - run: bash e2e_test/wait-for-image-available.sh
-      #   env:
-      #     CONTROLLER_IMAGE: ${{ steps.metadata.outputs.tags }}
+      - run: bash e2e_test/wait-for-image-available.sh
+        env:
+          CONTROLLER_IMAGE: ${{ steps.metadata.outputs.tags }}
 
-      # - run: make -C e2e_test deploy
-      #   env:
-      #     CONTROLLER_IMAGE: ${{ steps.metadata.outputs.tags }}
+      - run: make -C e2e_test deploy
+        env:
+          CONTROLLER_IMAGE: ${{ steps.metadata.outputs.tags }}
 
-      # - run: make -C e2e_test test
+      - run: make -C e2e_test test
 
-      # - run: make -C e2e_test logs-controller
-      #   if: always()
+      - run: make -C e2e_test logs-controller
+        if: always()
