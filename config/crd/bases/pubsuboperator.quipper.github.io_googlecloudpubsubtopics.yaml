@@ -36,9 +36,11 @@ spec:
           spec:
             description: GoogleCloudPubSubTopicSpec defines the desired state of GoogleCloudPubSubTopic
             properties:
-              foo:
-                description: Foo is an example field of GoogleCloudPubSubTopic. Edit
-                  googlecloudpubsubtopic_types.go to remove/update
+              projectID:
+                description: ID of project
+                type: string
+              topicID:
+                description: ID of topic
                 type: string
             type: object
           status:
