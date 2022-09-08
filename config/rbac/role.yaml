@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - pubsuboperator.quipper.github.io
+  resources:
+  - googlecloudpubsubtopics
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - pubsuboperator.quipper.github.io
+  resources:
+  - googlecloudpubsubtopics/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - pubsuboperator.quipper.github.io
+  resources:
+  - googlecloudpubsubtopics/status
+  verbs:
+  - get
+  - patch
+  - update
