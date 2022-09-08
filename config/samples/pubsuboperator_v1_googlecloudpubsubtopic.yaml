@@ -1,0 +1,6 @@
+apiVersion: pubsuboperator.quipper.github.io/v1
+kind: GoogleCloudPubSubTopic
+metadata:
+  name: googlecloudpubsubtopic-sample
+spec:
+  # TODO(user): Add fields here
