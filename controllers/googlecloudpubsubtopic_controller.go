@@ -52,10 +52,13 @@ func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ct
 	var topic pubsuboperatorv1.GoogleCloudPubSubTopic
 	if err := r.Client.Get(ctx, req.NamespacedName, &topic); err != nil {
 		logger.Error(err, "unable to get the resource")
-		return ctrl.Result{}, err
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	logger.Info("debug", topic)
+	logger.Info("Found the topic", "topic", topic)
 
 	return ctrl.Result{}, nil
 }

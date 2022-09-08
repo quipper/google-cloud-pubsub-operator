@@ -3,4 +3,5 @@ kind: GoogleCloudPubSubTopic
 metadata:
   name: googlecloudpubsubtopic-sample
 spec:
-  # TODO(user): Add fields here
+  projectID: my-project
+  topicID: my-topic
