@@ -28,8 +28,11 @@ type GoogleCloudPubSubTopicSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of GoogleCloudPubSubTopic. Edit googlecloudpubsubtopic_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// ID of project
+	ProjectID string `json:"projectID,omitempty"`
+
+	// ID of topic
+	TopicID string `json:"topicID,omitempty"`
 }
 
 // GoogleCloudPubSubTopicStatus defines the observed state of GoogleCloudPubSubTopic

@@ -47,9 +47,15 @@ type GoogleCloudPubSubTopicReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var topic pubsuboperatorv1.GoogleCloudPubSubTopic
+	if err := r.Client.Get(ctx, req.NamespacedName, &topic); err != nil {
+		logger.Error(err, "unable to get the resource")
+		return ctrl.Result{}, err
+	}
+
+	logger.Info("debug", topic)
 
 	return ctrl.Result{}, nil
 }
