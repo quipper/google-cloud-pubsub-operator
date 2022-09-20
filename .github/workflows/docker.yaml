@@ -5,26 +5,24 @@ on:
     branches:
       - main
     paths:
-      - TODO_remove_this
-      # - .github/workflows/docker.yaml
-      # - Dockerfile
-      # - go.*
-      # - main.go
-      # - api/**
-      # - controllers/**
-      # - pkg/**
+      - .github/workflows/docker.yaml
+      - Dockerfile
+      - go.*
+      - main.go
+      - api/**
+      - controllers/**
+      - pkg/**
     tags:
       - v*
   pull_request:
     paths:
-      - TODO_remove_this
-      # - .github/workflows/docker.yaml
-      # - Dockerfile
-      # - go.*
-      # - main.go
-      # - api/**
-      # - controllers/**
-      # - pkg/**
+      - .github/workflows/docker.yaml
+      - Dockerfile
+      - go.*
+      - main.go
+      - api/**
+      - controllers/**
+      - pkg/**
 
 jobs:
   build:
@@ -55,7 +53,7 @@ jobs:
           cache-from: ${{ steps.cache.outputs.cache-from }}
           cache-to: ${{ steps.cache.outputs.cache-to }}
 
-  test:
+  e2e-test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
