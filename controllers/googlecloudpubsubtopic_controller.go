@@ -67,11 +67,7 @@ func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ct
 
 	t, err := createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
 	if err != nil {
-		type grpcErr interface {
-			GRPCStatus() *status.Status
-		}
-		var se grpcErr
-		if errors.As(err, &se) && se.GRPCStatus().Code() == codes.AlreadyExists {
+		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
 			// don't treat as error
 			logger.Info("PubSub topic already exists")
 			return ctrl.Result{}, nil
@@ -105,4 +101,17 @@ func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic,
 	}
 
 	return t, nil
+}
+
+func gRPCStatusFromError(err error) (*status.Status, bool) {
+	type gRPCError interface {
+		GRPCStatus() *status.Status
+	}
+
+	var se gRPCError
+	if errors.As(err, &se) {
+		return se.GRPCStatus(), true
+	}
+
+	return nil, false
 }
