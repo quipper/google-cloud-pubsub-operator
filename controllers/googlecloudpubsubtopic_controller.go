@@ -18,9 +18,12 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cloud.google.com/go/pubsub"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -64,6 +67,16 @@ func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ct
 
 	t, err := createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
 	if err != nil {
+		type grpcErr interface {
+			GRPCStatus() *status.Status
+		}
+		var se grpcErr
+		if errors.As(err, &se) && se.GRPCStatus().Code() == codes.AlreadyExists {
+			// don't treat as error
+			logger.Info("PubSub topic already exists")
+			return ctrl.Result{}, nil
+		}
+
 		return ctrl.Result{}, err
 	}
 
