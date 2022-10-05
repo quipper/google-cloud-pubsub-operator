@@ -3,5 +3,5 @@ kind: GoogleCloudPubSubTopic
 metadata:
   name: googlecloudpubsubtopic-sample
 spec:
-  projectID: my-project
-  topicID: my-topic
+  projectID: devs-sandbox
+  topicID: pankona-test3
