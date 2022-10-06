@@ -18,7 +18,12 @@ package controllers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"cloud.google.com/go/pubsub"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,6 +65,19 @@ func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ct
 
 	logger.Info("Found the topic", "topic", topic)
 
+	t, err := createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
+	if err != nil {
+		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
+			// don't treat as error
+			logger.Info("PubSub topic already exists")
+			return ctrl.Result{}, nil
+		}
+
+		return ctrl.Result{}, err
+	}
+
+	logger.Info(fmt.Sprintf("Topic created: %v", t.ID()), "topic", topic)
+
 	return ctrl.Result{}, nil
 }
 
@@ -68,4 +86,32 @@ func (r *GoogleCloudPubSubTopicReconciler) SetupWithManager(mgr ctrl.Manager) er
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&pubsuboperatorv1.GoogleCloudPubSubTopic{}).
 		Complete(r)
+}
+
+func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic, error) {
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
+	}
+	defer client.Close()
+
+	t, err := client.CreateTopic(ctx, topicID)
+	if err != nil {
+		return nil, fmt.Errorf("CreateTopic: %w", err)
+	}
+
+	return t, nil
+}
+
+func gRPCStatusFromError(err error) (*status.Status, bool) {
+	type gRPCError interface {
+		GRPCStatus() *status.Status
+	}
+
+	var se gRPCError
+	if errors.As(err, &se) {
+		return se.GRPCStatus(), true
+	}
+
+	return nil, false
 }
