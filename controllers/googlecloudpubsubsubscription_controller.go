@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	"google.golang.org/grpc/codes"
@@ -30,30 +31,30 @@ import (
 	pubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 )
 
-// GoogleCloudPubSubTopicReconciler reconciles a GoogleCloudPubSubTopic object
-type GoogleCloudPubSubTopicReconciler struct {
+// GoogleCloudPubSubSubscriptionReconciler reconciles a GoogleCloudPubSubSubscription object
+type GoogleCloudPubSubSubscriptionReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubtopics,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubtopics/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubtopics/finalizers,verbs=update
+//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubsubscriptions,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubsubscriptions/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubsubscriptions/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the GoogleCloudPubSubTopic object against the actual cluster state, and then
+// the GoogleCloudPubSubSubscription object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
-func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
+func (r *GoogleCloudPubSubSubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	var topic pubsuboperatorv1.GoogleCloudPubSubTopic
-	if err := r.Client.Get(ctx, req.NamespacedName, &topic); err != nil {
+	var subscription pubsuboperatorv1.GoogleCloudPubSubSubscription
+	if err := r.Client.Get(ctx, req.NamespacedName, &subscription); err != nil {
 		logger.Error(err, "unable to get the resource")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
@@ -61,42 +62,44 @@ func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ct
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	logger.Info("Found the topic", "topic", topic)
+	logger.Info("Found the subscription", "subscription", subscription)
 
-	t, err := createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
+	s, err := createSubscription(ctx, subscription.Spec.ProjectID, subscription.Spec.TopicID)
 	if err != nil {
 		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
 			// don't treat as error
-			logger.Info("PubSub topic already exists")
+			logger.Info("PubSub subscription already exists")
 			return ctrl.Result{}, nil
 		}
 
 		return ctrl.Result{}, err
 	}
 
-	logger.Info(fmt.Sprintf("Topic created: %v", t.ID()), "topic", topic)
+	logger.Info(fmt.Sprintf("Subscription created: %v", s.ID()), "subscription", subscription)
 
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *GoogleCloudPubSubTopicReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&pubsuboperatorv1.GoogleCloudPubSubTopic{}).
-		Complete(r)
-}
-
-func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic, error) {
-	client, err := pubsub.NewClient(ctx, projectID)
+func createSubscription(ctx context.Context, projectID, topicID string) (*pubsub.Subscription, error) {
+	c, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
 	}
-	defer client.Close()
+	defer c.Close()
 
-	t, err := client.CreateTopic(ctx, topicID)
+	s, err := c.CreateSubscription(ctx, topicID, pubsub.SubscriptionConfig{
+		ExpirationPolicy: 24 * time.Hour,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("CreateTopic: %w", err)
+		return nil, fmt.Errorf("CreateSubscription: %w", err)
 	}
 
-	return t, nil
+	return s, nil
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *GoogleCloudPubSubSubscriptionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&pubsuboperatorv1.GoogleCloudPubSubSubscription{}).
+		Complete(r)
 }
