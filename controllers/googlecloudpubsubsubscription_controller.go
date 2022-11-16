@@ -64,7 +64,7 @@ func (r *GoogleCloudPubSubSubscriptionReconciler) Reconcile(ctx context.Context,
 
 	logger.Info("Found the subscription", "subscription", subscription)
 
-	s, err := createSubscription(ctx, subscription.Spec.ProjectID, subscription.Spec.TopicID)
+	s, err := createSubscription(ctx, subscription)
 	if err != nil {
 		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
 			// don't treat as error
@@ -80,14 +80,16 @@ func (r *GoogleCloudPubSubSubscriptionReconciler) Reconcile(ctx context.Context,
 	return ctrl.Result{}, nil
 }
 
-func createSubscription(ctx context.Context, projectID, topicID string) (*pubsub.Subscription, error) {
-	c, err := pubsub.NewClient(ctx, projectID)
+func createSubscription(ctx context.Context, subscription pubsuboperatorv1.GoogleCloudPubSubSubscription) (*pubsub.Subscription, error) {
+	c, err := pubsub.NewClient(ctx, subscription.Spec.SubscriptionProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
 	}
 	defer c.Close()
 
-	s, err := c.CreateSubscription(ctx, topicID, pubsub.SubscriptionConfig{
+	topic := c.TopicInProject(subscription.Spec.TopicID, subscription.Spec.TopicProjectID)
+	s, err := c.CreateSubscription(ctx, subscription.Spec.SubscriptionID, pubsub.SubscriptionConfig{
+		Topic:            topic,
 		ExpirationPolicy: 24 * time.Hour,
 	})
 	if err != nil {

@@ -25,16 +25,17 @@ import (
 
 // GoogleCloudPubSubSubscriptionSpec defines the desired state of GoogleCloudPubSubSubscription
 type GoogleCloudPubSubSubscriptionSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// subscription ID
+	SubscriptionID string `json:"subscriptionID,omitempty"`
 
-	//TODO: consider project ID of subscription
+	// project ID of subscription
+	SubscriptionProjectID string `json:"subscriptionProjectID,omitempty"`
 
-	// ID of project
-	ProjectID string `json:"projectID,omitempty"`
-
-	// ID of topic
+	// topic ID
 	TopicID string `json:"topicID,omitempty"`
+
+	// project ID of topic
+	TopicProjectID string `json:"topicProjectID,omitempty"`
 }
 
 // GoogleCloudPubSubSubscriptionStatus defines the observed state of GoogleCloudPubSubSubscription
