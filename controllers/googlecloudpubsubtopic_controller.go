@@ -18,12 +18,10 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"cloud.google.com/go/pubsub"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -101,17 +99,4 @@ func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic,
 	}
 
 	return t, nil
-}
-
-func gRPCStatusFromError(err error) (*status.Status, bool) {
-	type gRPCError interface {
-		GRPCStatus() *status.Status
-	}
-
-	var se gRPCError
-	if errors.As(err, &se) {
-		return se.GRPCStatus(), true
-	}
-
-	return nil, false
 }

@@ -8,6 +8,32 @@ rules:
 - apiGroups:
   - pubsuboperator.quipper.github.io
   resources:
+  - googlecloudpubsubsubscriptions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - pubsuboperator.quipper.github.io
+  resources:
+  - googlecloudpubsubsubscriptions/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - pubsuboperator.quipper.github.io
+  resources:
+  - googlecloudpubsubsubscriptions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - pubsuboperator.quipper.github.io
+  resources:
   - googlecloudpubsubtopics
   verbs:
   - create
