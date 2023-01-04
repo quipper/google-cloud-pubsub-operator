@@ -1,0 +1,42 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+  ],
+  "labels": [
+    "renovate/{{depName}}",
+  ],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    },
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": [
+        "^\\.github/workflows/.+\\.ya?ml$",
+      ],
+      "matchStrings": [
+        "uses: golangci/golangci-lint-action@.+?\\s+with:\\s+version: (?<currentValue>.+)\\n",
+      ],
+      "depNameTemplate": "golangci/golangci-lint",
+      "datasourceTemplate": "github-releases",
+    },
+    {
+      "fileMatch": [
+        "^\\.github/workflows/.+\\.ya?ml$",
+      ],
+      "matchStrings": [
+        "\\s+go-version: (?<currentValue>.+)\\n",
+      ],
+      "depNameTemplate": "golang-version",
+      "datasourceTemplate": "golang-version",
+      "versioningTemplate": "semver-coerced",
+    },
+  ],
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths"
+  ],
+}
