@@ -9,4 +9,5 @@ metadata:
     app.kubernetes.io/created-by: google-cloud-pubsub-operator
   name: topic-sample
 spec:
-  # TODO(user): Add fields here
+  projectID: devs-sandbox
+  topicID: pankona-test3
