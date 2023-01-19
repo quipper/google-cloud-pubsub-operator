@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 	pubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 	"github.com/quipper/google-cloud-pubsub-operator/controllers"
 	//+kubebuilder:scaffold:imports
@@ -45,6 +46,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(pubsuboperatorv1.AddToScheme(scheme))
+	utilruntime.Must(googlecloudpubsuboperatorv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -101,6 +103,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GoogleCloudPubSubSubscription")
+		os.Exit(1)
+	}
+	if err = (&controllers.TopicReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Topic")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
