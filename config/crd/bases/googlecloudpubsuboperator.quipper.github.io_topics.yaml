@@ -5,21 +5,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
-  name: googlecloudpubsubtopics.pubsuboperator.quipper.github.io
+  name: topics.googlecloudpubsuboperator.quipper.github.io
 spec:
-  group: pubsuboperator.quipper.github.io
+  group: googlecloudpubsuboperator.quipper.github.io
   names:
-    kind: GoogleCloudPubSubTopic
-    listKind: GoogleCloudPubSubTopicList
-    plural: googlecloudpubsubtopics
-    singular: googlecloudpubsubtopic
+    kind: Topic
+    listKind: TopicList
+    plural: topics
+    singular: topic
   scope: Namespaced
   versions:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: GoogleCloudPubSubTopic is the Schema for the googlecloudpubsubtopics
-          API
+        description: Topic is the Schema for the topics API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +33,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: GoogleCloudPubSubTopicSpec defines the desired state of GoogleCloudPubSubTopic
+            description: TopicSpec defines the desired state of Topic
             properties:
               projectID:
                 description: ID of project
@@ -44,8 +43,7 @@ spec:
                 type: string
             type: object
           status:
-            description: GoogleCloudPubSubTopicStatus defines the observed state of
-              GoogleCloudPubSubTopic
+            description: TopicStatus defines the observed state of Topic
             type: object
         type: object
     served: true

@@ -9,8 +9,8 @@ resources:
     namespaced: true
   controller: true
   domain: quipper.github.io
-  group: pubsuboperator
-  kind: GoogleCloudPubSubTopic
+  group: googlecloudpubsuboperator
+  kind: Topic
   path: github.com/quipper/google-cloud-pubsub-operator/api/v1
   version: v1
 - api:
@@ -18,8 +18,8 @@ resources:
     namespaced: true
   controller: true
   domain: quipper.github.io
-  group: pubsuboperator
-  kind: GoogleCloudPubSubSubscription
+  group: googlecloudpubsuboperator
+  kind: Subscription
   path: github.com/quipper/google-cloud-pubsub-operator/api/v1
   version: v1
 version: "3"

@@ -2,7 +2,7 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: googlecloudpubsubtopics.pubsuboperator.quipper.github.io
+  name: topics.googlecloudpubsuboperator.quipper.github.io
 spec:
   conversion:
     strategy: Webhook

@@ -1,20 +1,20 @@
-# permissions for end users to edit googlecloudpubsubsubscriptions.
+# permissions for end users to edit topics.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: googlecloudpubsubsubscription-editor-role
+    app.kubernetes.io/instance: topic-editor-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: google-cloud-pubsub-operator
     app.kubernetes.io/part-of: google-cloud-pubsub-operator
     app.kubernetes.io/managed-by: kustomize
-  name: googlecloudpubsubsubscription-editor-role
+  name: topic-editor-role
 rules:
 - apiGroups:
-  - pubsuboperator.quipper.github.io
+  - googlecloudpubsuboperator.quipper.github.io
   resources:
-  - googlecloudpubsubsubscriptions
+  - topics
   verbs:
   - create
   - delete
@@ -24,8 +24,8 @@ rules:
   - update
   - watch
 - apiGroups:
-  - pubsuboperator.quipper.github.io
+  - googlecloudpubsuboperator.quipper.github.io
   resources:
-  - googlecloudpubsubsubscriptions/status
+  - topics/status
   verbs:
   - get

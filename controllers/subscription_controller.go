@@ -28,32 +28,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	pubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
+	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 )
 
-// GoogleCloudPubSubSubscriptionReconciler reconciles a GoogleCloudPubSubSubscription object
-type GoogleCloudPubSubSubscriptionReconciler struct {
+// SubscriptionReconciler reconciles a Subscription object
+type SubscriptionReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubsubscriptions,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubsubscriptions/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubsubscriptions/finalizers,verbs=update
+//+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the GoogleCloudPubSubSubscription object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
-func (r *GoogleCloudPubSubSubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	var subscription pubsuboperatorv1.GoogleCloudPubSubSubscription
+	var subscription googlecloudpubsuboperatorv1.Subscription
 	if err := r.Client.Get(ctx, req.NamespacedName, &subscription); err != nil {
 		logger.Error(err, "unable to get the resource")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
@@ -80,7 +71,14 @@ func (r *GoogleCloudPubSubSubscriptionReconciler) Reconcile(ctx context.Context,
 	return ctrl.Result{}, nil
 }
 
-func createSubscription(ctx context.Context, subscription pubsuboperatorv1.GoogleCloudPubSubSubscription) (*pubsub.Subscription, error) {
+// SetupWithManager sets up the controller with the Manager.
+func (r *SubscriptionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&googlecloudpubsuboperatorv1.Subscription{}).
+		Complete(r)
+}
+
+func createSubscription(ctx context.Context, subscription googlecloudpubsuboperatorv1.Subscription) (*pubsub.Subscription, error) {
 	c, err := pubsub.NewClient(ctx, subscription.Spec.SubscriptionProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
@@ -97,11 +95,4 @@ func createSubscription(ctx context.Context, subscription pubsuboperatorv1.Googl
 	}
 
 	return s, nil
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *GoogleCloudPubSubSubscriptionReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&pubsuboperatorv1.GoogleCloudPubSubSubscription{}).
-		Complete(r)
 }

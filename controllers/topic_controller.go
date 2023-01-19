@@ -27,32 +27,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	pubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
+	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 )
 
-// GoogleCloudPubSubTopicReconciler reconciles a GoogleCloudPubSubTopic object
-type GoogleCloudPubSubTopicReconciler struct {
+// TopicReconciler reconciles a Topic object
+type TopicReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubtopics,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubtopics/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=pubsuboperator.quipper.github.io,resources=googlecloudpubsubtopics/finalizers,verbs=update
+//+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the GoogleCloudPubSubTopic object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
-func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	var topic pubsuboperatorv1.GoogleCloudPubSubTopic
+	var topic googlecloudpubsuboperatorv1.Topic
 	if err := r.Client.Get(ctx, req.NamespacedName, &topic); err != nil {
 		logger.Error(err, "unable to get the resource")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
@@ -80,20 +71,20 @@ func (r *GoogleCloudPubSubTopicReconciler) Reconcile(ctx context.Context, req ct
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *GoogleCloudPubSubTopicReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *TopicReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&pubsuboperatorv1.GoogleCloudPubSubTopic{}).
+		For(&googlecloudpubsuboperatorv1.Topic{}).
 		Complete(r)
 }
 
 func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic, error) {
-	client, err := pubsub.NewClient(ctx, projectID)
+	c, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
 	}
-	defer client.Close()
+	defer c.Close()
 
-	t, err := client.CreateTopic(ctx, topicID)
+	t, err := c.CreateTopic(ctx, topicID)
 	if err != nil {
 		return nil, fmt.Errorf("CreateTopic: %w", err)
 	}

@@ -20,14 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// GoogleCloudPubSubTopicSpec defines the desired state of GoogleCloudPubSubTopic
-type GoogleCloudPubSubTopicSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
+// TopicSpec defines the desired state of Topic
+type TopicSpec struct {
 	// ID of project
 	ProjectID string `json:"projectID,omitempty"`
 
@@ -35,8 +29,8 @@ type GoogleCloudPubSubTopicSpec struct {
 	TopicID string `json:"topicID,omitempty"`
 }
 
-// GoogleCloudPubSubTopicStatus defines the observed state of GoogleCloudPubSubTopic
-type GoogleCloudPubSubTopicStatus struct {
+// TopicStatus defines the observed state of Topic
+type TopicStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -44,24 +38,24 @@ type GoogleCloudPubSubTopicStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// GoogleCloudPubSubTopic is the Schema for the googlecloudpubsubtopics API
-type GoogleCloudPubSubTopic struct {
+// Topic is the Schema for the topics API
+type Topic struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   GoogleCloudPubSubTopicSpec   `json:"spec,omitempty"`
-	Status GoogleCloudPubSubTopicStatus `json:"status,omitempty"`
+	Spec   TopicSpec   `json:"spec,omitempty"`
+	Status TopicStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// GoogleCloudPubSubTopicList contains a list of GoogleCloudPubSubTopic
-type GoogleCloudPubSubTopicList struct {
+// TopicList contains a list of Topic
+type TopicList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []GoogleCloudPubSubTopic `json:"items"`
+	Items           []Topic `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&GoogleCloudPubSubTopic{}, &GoogleCloudPubSubTopicList{})
+	SchemeBuilder.Register(&Topic{}, &TopicList{})
 }

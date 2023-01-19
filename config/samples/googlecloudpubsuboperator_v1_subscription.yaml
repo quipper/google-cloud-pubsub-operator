@@ -1,0 +1,16 @@
+apiVersion: googlecloudpubsuboperator.quipper.github.io/v1
+kind: Subscription
+metadata:
+  labels:
+    app.kubernetes.io/name: subscription
+    app.kubernetes.io/instance: subscription-sample
+    app.kubernetes.io/part-of: google-cloud-pubsub-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: google-cloud-pubsub-operator
+  name: subscription-sample
+spec:
+  subscriptionProjectID: devs-sandbox
+  subscriptionID: pankona-test3
+
+  topicProjectID: devs-sandbox
+  topicID: pankona-test3

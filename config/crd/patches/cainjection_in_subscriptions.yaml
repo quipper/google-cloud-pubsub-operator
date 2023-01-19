@@ -4,4 +4,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
-  name: googlecloudpubsubtopics.pubsuboperator.quipper.github.io
+  name: subscriptions.googlecloudpubsuboperator.quipper.github.io
