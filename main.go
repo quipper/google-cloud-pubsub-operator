@@ -91,20 +91,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.GoogleCloudPubSubTopicReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GoogleCloudPubSubTopic")
-		os.Exit(1)
-	}
-	if err = (&controllers.GoogleCloudPubSubSubscriptionReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "GoogleCloudPubSubSubscription")
-		os.Exit(1)
-	}
 	if err = (&controllers.TopicReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),

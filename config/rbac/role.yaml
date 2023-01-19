@@ -6,9 +6,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - pubsuboperator.quipper.github.io
+  - googlecloudpubsuboperator.quipper.github.io
   resources:
-  - googlecloudpubsubsubscriptions
+  - subscriptions
   verbs:
   - create
   - delete
@@ -18,23 +18,23 @@ rules:
   - update
   - watch
 - apiGroups:
-  - pubsuboperator.quipper.github.io
+  - googlecloudpubsuboperator.quipper.github.io
   resources:
-  - googlecloudpubsubsubscriptions/finalizers
+  - subscriptions/finalizers
   verbs:
   - update
 - apiGroups:
-  - pubsuboperator.quipper.github.io
+  - googlecloudpubsuboperator.quipper.github.io
   resources:
-  - googlecloudpubsubsubscriptions/status
+  - subscriptions/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - pubsuboperator.quipper.github.io
+  - googlecloudpubsuboperator.quipper.github.io
   resources:
-  - googlecloudpubsubtopics
+  - topics
   verbs:
   - create
   - delete
@@ -44,15 +44,15 @@ rules:
   - update
   - watch
 - apiGroups:
-  - pubsuboperator.quipper.github.io
+  - googlecloudpubsuboperator.quipper.github.io
   resources:
-  - googlecloudpubsubtopics/finalizers
+  - topics/finalizers
   verbs:
   - update
 - apiGroups:
-  - pubsuboperator.quipper.github.io
+  - googlecloudpubsuboperator.quipper.github.io
   resources:
-  - googlecloudpubsubtopics/status
+  - topics/status
   verbs:
   - get
   - patch

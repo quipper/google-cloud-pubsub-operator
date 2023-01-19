@@ -18,7 +18,11 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"cloud.google.com/go/pubsub"
+	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,19 +41,32 @@ type SubscriptionReconciler struct {
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Subscription object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
 func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var subscription googlecloudpubsuboperatorv1.Subscription
+	if err := r.Client.Get(ctx, req.NamespacedName, &subscription); err != nil {
+		logger.Error(err, "unable to get the resource")
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	logger.Info("Found the subscription", "subscription", subscription)
+
+	s, err := createSubscription(ctx, subscription)
+	if err != nil {
+		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
+			// don't treat as error
+			logger.Info("PubSub subscription already exists")
+			return ctrl.Result{}, nil
+		}
+
+		return ctrl.Result{}, err
+	}
+
+	logger.Info(fmt.Sprintf("Subscription created: %v", s.ID()), "subscription", subscription)
 
 	return ctrl.Result{}, nil
 }
@@ -59,4 +76,23 @@ func (r *SubscriptionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&googlecloudpubsuboperatorv1.Subscription{}).
 		Complete(r)
+}
+
+func createSubscription(ctx context.Context, subscription googlecloudpubsuboperatorv1.Subscription) (*pubsub.Subscription, error) {
+	c, err := pubsub.NewClient(ctx, subscription.Spec.SubscriptionProjectID)
+	if err != nil {
+		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
+	}
+	defer c.Close()
+
+	topic := c.TopicInProject(subscription.Spec.TopicID, subscription.Spec.TopicProjectID)
+	s, err := c.CreateSubscription(ctx, subscription.Spec.SubscriptionID, pubsub.SubscriptionConfig{
+		Topic:            topic,
+		ExpirationPolicy: 24 * time.Hour,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("CreateSubscription: %w", err)
+	}
+
+	return s, nil
 }

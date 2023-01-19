@@ -18,7 +18,10 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
+	"cloud.google.com/go/pubsub"
+	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,19 +40,32 @@ type TopicReconciler struct {
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Topic object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
 func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var topic googlecloudpubsuboperatorv1.Topic
+	if err := r.Client.Get(ctx, req.NamespacedName, &topic); err != nil {
+		logger.Error(err, "unable to get the resource")
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	logger.Info("Found the topic", "topic", topic)
+
+	t, err := createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
+	if err != nil {
+		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
+			// don't treat as error
+			logger.Info("PubSub topic already exists")
+			return ctrl.Result{}, nil
+		}
+
+		return ctrl.Result{}, err
+	}
+
+	logger.Info(fmt.Sprintf("Topic created: %v", t.ID()), "topic", topic)
 
 	return ctrl.Result{}, nil
 }
@@ -59,4 +75,19 @@ func (r *TopicReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&googlecloudpubsuboperatorv1.Topic{}).
 		Complete(r)
+}
+
+func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic, error) {
+	c, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
+	}
+	defer c.Close()
+
+	t, err := c.CreateTopic(ctx, topicID)
+	if err != nil {
+		return nil, fmt.Errorf("CreateTopic: %w", err)
+	}
+
+	return t, nil
 }

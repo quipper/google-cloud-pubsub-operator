@@ -20,16 +20,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // TopicSpec defines the desired state of Topic
 type TopicSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// ID of project
+	ProjectID string `json:"projectID,omitempty"`
 
-	// Foo is an example field of Topic. Edit topic_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// ID of topic
+	TopicID string `json:"topicID,omitempty"`
 }
 
 // TopicStatus defines the observed state of Topic
