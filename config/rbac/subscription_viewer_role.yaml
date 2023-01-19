@@ -1,0 +1,27 @@
+# permissions for end users to view subscriptions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: subscription-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: google-cloud-pubsub-operator
+    app.kubernetes.io/part-of: google-cloud-pubsub-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: subscription-viewer-role
+rules:
+- apiGroups:
+  - googlecloudpubsuboperator.quipper.github.io
+  resources:
+  - subscriptions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - googlecloudpubsuboperator.quipper.github.io
+  resources:
+  - subscriptions/status
+  verbs:
+  - get
