@@ -5,7 +5,7 @@ go 1.19
 require (
 	cloud.google.com/go/pubsub v1.28.0
 	github.com/onsi/ginkgo/v2 v2.7.0
-	github.com/onsi/gomega v1.25.0
+	github.com/onsi/gomega v1.26.0
 	google.golang.org/grpc v1.52.0
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
