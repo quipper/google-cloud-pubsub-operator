@@ -91,3 +91,20 @@ func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic,
 
 	return t, nil
 }
+
+func deleteTopic(ctx context.Context, projectID, topicID string) error {
+	c, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return fmt.Errorf("pubsub.NewClient: %w", err)
+	}
+	defer c.Close()
+
+	if err := c.Topic(topicID).Delete(ctx); err != nil {
+		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.NotFound {
+			// for idempotent
+			return nil
+		}
+		return fmt.Errorf("unable to delete topic %s: %w", topicID, err)
+	}
+	return nil
+}
