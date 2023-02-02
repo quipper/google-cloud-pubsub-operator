@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
@@ -35,6 +36,8 @@ type TopicReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
+
+const topicFinalizerName = "topic.googlecloudpubsuboperator.quipper.github.io/finalizer"
 
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics/status,verbs=get;update;patch
@@ -51,8 +54,39 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		// on deleted requests.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-
 	logger.Info("Found the topic", "topic", topic)
+
+	// examine DeletionTimestamp to determine if object is under deletion
+	if topic.ObjectMeta.DeletionTimestamp.IsZero() {
+		// The object is not being deleted, so if it does not have our finalizer,
+		// then lets add the finalizer and update the object. This is equivalent
+		// registering our finalizer.
+		if !controllerutil.ContainsFinalizer(&topic, topicFinalizerName) {
+			controllerutil.AddFinalizer(&topic, topicFinalizerName)
+			if err := r.Update(ctx, &topic); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		// The object is being deleted
+		if controllerutil.ContainsFinalizer(&topic, topicFinalizerName) {
+			// our finalizer is present, so lets handle any external dependency
+			if err := deleteTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID); err != nil {
+				// if fail to delete the external dependency here, return with error
+				// so that it can be retried
+				return ctrl.Result{}, err
+			}
+
+			// remove our finalizer from the list and update it.
+			controllerutil.RemoveFinalizer(&topic, topicFinalizerName)
+			if err := r.Update(ctx, &topic); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
 
 	t, err := createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
 	if err != nil {
