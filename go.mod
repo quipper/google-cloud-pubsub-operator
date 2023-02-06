@@ -8,7 +8,7 @@ require (
 	github.com/onsi/gomega v1.26.0
 	google.golang.org/grpc v1.52.3
 	k8s.io/apimachinery v0.26.1
-	k8s.io/client-go v0.26.1
+	k8s.io/client-go/v11 v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.14.4
 )
 
