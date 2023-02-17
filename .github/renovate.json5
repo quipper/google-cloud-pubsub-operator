@@ -2,10 +2,16 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:base",
-    ":automergeMinor",
     ":label(renovate/{{depName}})",
-    "github>int128/go-renovate-config#v1.0.0",
-    "github>int128/go-renovate-config:kubernetes#v1.0.0",
-    "github>int128/go-renovate-config:doc-github-releases#v1.0.0",
+    ":automergeMinor",
+    ":automergeDigest",
+    "github>int128/go-renovate-config#v1.1.0",
+    "github>int128/go-renovate-config:github-actions#v1.1.0",
+    "github>int128/go-renovate-config:kubernetes#v1.1.0",
+    "github>int128/go-renovate-config:doc-github-releases#v1.1.0",
+  ],
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths"
   ],
 }
