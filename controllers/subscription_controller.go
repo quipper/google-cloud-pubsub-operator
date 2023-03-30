@@ -26,10 +26,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 )
+
+const subscriptionFinalizerName = "subscription.googlecloudpubsuboperator.quipper.github.io/finalizer"
 
 // SubscriptionReconciler reconciles a Subscription object
 type SubscriptionReconciler struct {
@@ -54,6 +57,38 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	logger.Info("Found the subscription", "subscription", subscription)
+
+	// examine DeletionTimestamp to determine if object is under deletion
+	if subscription.ObjectMeta.DeletionTimestamp.IsZero() {
+		// The object is not being deleted, so if it does not have our finalizer,
+		// then lets add the finalizer and update the object. This is equivalent
+		// registering our finalizer.
+		if !controllerutil.ContainsFinalizer(&subscription, subscriptionFinalizerName) {
+			controllerutil.AddFinalizer(&subscription, subscriptionFinalizerName)
+			if err := r.Update(ctx, &subscription); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		// The object is being deleted
+		if controllerutil.ContainsFinalizer(&subscription, subscriptionFinalizerName) {
+			// our finalizer is present, so lets handle any external dependency
+			if err := deleteSubscription(ctx, subscription); err != nil {
+				// if fail to delete the external dependency here, return with error
+				// so that it can be retried
+				return ctrl.Result{}, err
+			}
+
+			// remove our finalizer from the list and update it.
+			controllerutil.RemoveFinalizer(&subscription, subscriptionFinalizerName)
+			if err := r.Update(ctx, &subscription); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
 
 	s, err := createSubscription(ctx, subscription)
 	if err != nil {
@@ -95,4 +130,22 @@ func createSubscription(ctx context.Context, subscription googlecloudpubsubopera
 	}
 
 	return s, nil
+}
+
+func deleteSubscription(ctx context.Context, subscription googlecloudpubsuboperatorv1.Subscription) error {
+	c, err := pubsub.NewClient(ctx, subscription.Spec.SubscriptionProjectID)
+	if err != nil {
+		return fmt.Errorf("pubsub.NewClient: %w", err)
+	}
+	defer c.Close()
+
+	err = c.Subscription(subscription.Spec.SubscriptionID).Delete(ctx)
+	if err != nil {
+		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.NotFound {
+			// for idempotent
+			return nil
+		}
+		return fmt.Errorf("unable to delete subscription: %w", err)
+	}
+	return nil
 }
