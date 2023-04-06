@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/pubsub"
+	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -34,7 +35,8 @@ import (
 // TopicReconciler reconciles a Topic object
 type TopicReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	NewClient func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error)
 }
 
 const topicFinalizerName = "topic.googlecloudpubsuboperator.quipper.github.io/finalizer"
@@ -71,7 +73,7 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		// The object is being deleted
 		if controllerutil.ContainsFinalizer(&topic, topicFinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
-			if err := deleteTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID); err != nil {
+			if err := r.deleteTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
 				return ctrl.Result{}, err
@@ -88,7 +90,7 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	t, err := createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
+	t, err := r.createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
 	if err != nil {
 		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
 			// don't treat as error
@@ -111,8 +113,8 @@ func (r *TopicReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic, error) {
-	c, err := pubsub.NewClient(ctx, projectID)
+func (r *TopicReconciler) createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic, error) {
+	c, err := r.NewClient(ctx, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
 	}
@@ -126,8 +128,8 @@ func createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic,
 	return t, nil
 }
 
-func deleteTopic(ctx context.Context, projectID, topicID string) error {
-	c, err := pubsub.NewClient(ctx, projectID)
+func (r *TopicReconciler) deleteTopic(ctx context.Context, projectID, topicID string) error {
+	c, err := r.NewClient(ctx, projectID)
 	if err != nil {
 		return fmt.Errorf("pubsub.NewClient: %w", err)
 	}

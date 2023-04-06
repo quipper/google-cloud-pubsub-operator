@@ -21,8 +21,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/pstest"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -85,9 +89,23 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
+	psServer := pstest.NewServer()
+	DeferCleanup(func() {
+		psServer.Close()
+	})
+
 	err = (&TopicReconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
+		NewClient: func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error) {
+			return pubsub.NewClient(ctx, projectID,
+				append(opts,
+					option.WithEndpoint(psServer.Addr),
+					option.WithoutAuthentication(),
+					option.WithGRPCDialOption(grpc.WithInsecure()),
+				)...,
+			)
+		},
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
