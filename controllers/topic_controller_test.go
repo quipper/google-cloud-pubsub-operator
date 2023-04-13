@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +22,7 @@ var _ = Describe("Topic controller", func() {
 			psClient, err := pubsub.NewClient(ctx, "my-project",
 				option.WithEndpoint(psServer.Addr),
 				option.WithoutAuthentication(),
-				option.WithGRPCDialOption(grpc.WithInsecure()),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
