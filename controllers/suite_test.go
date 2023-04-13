@@ -45,6 +45,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var psServer *pstest.Server
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -88,7 +89,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	psServer := pstest.NewServer()
+	psServer = pstest.NewServer()
 	DeferCleanup(func() {
 		psServer.Close()
 	})
