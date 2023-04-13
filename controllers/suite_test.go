@@ -21,12 +21,15 @@ import (
 	"path/filepath"
 	"testing"
 
+	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/pstest"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	ctrl "sigs.k8s.io/controller-runtime"
-
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -85,9 +88,23 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
+	psServer := pstest.NewServer()
+	DeferCleanup(func() {
+		psServer.Close()
+	})
+
 	err = (&TopicReconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
+		NewClient: func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error) {
+			return pubsub.NewClient(ctx, projectID,
+				append(opts,
+					option.WithEndpoint(psServer.Addr),
+					option.WithoutAuthentication(),
+					option.WithGRPCDialOption(grpc.WithInsecure()),
+				)...,
+			)
+		},
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
