@@ -25,7 +25,7 @@ var _ = Describe("Topic controller", func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			By("By creating a Topic")
+			By("Creating a Topic")
 			topic := &googlecloudpubsuboperatorv1.Topic{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "googlecloudpubsuboperator.quipper.github.io/v1",
@@ -42,6 +42,7 @@ var _ = Describe("Topic controller", func() {
 			}
 			Expect(k8sClient.Create(ctx, topic)).Should(Succeed())
 
+			By("Checking if the Topic exists")
 			Eventually(func(g Gomega) {
 				topicExists, err := psClient.Topic("my-topic").Exists(ctx)
 				g.Expect(err).ShouldNot(HaveOccurred())
