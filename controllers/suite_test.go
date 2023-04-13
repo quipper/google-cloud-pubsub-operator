@@ -92,7 +92,7 @@ var _ = BeforeSuite(func() {
 
 	psServer = pstest.NewServer()
 	DeferCleanup(func() {
-		psServer.Close()
+		Expect(psServer.Close()).Should(Succeed())
 	})
 
 	err = (&TopicReconciler{
