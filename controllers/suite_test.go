@@ -27,6 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -102,7 +103,7 @@ var _ = BeforeSuite(func() {
 				append(opts,
 					option.WithEndpoint(psServer.Addr),
 					option.WithoutAuthentication(),
-					option.WithGRPCDialOption(grpc.WithInsecure()),
+					option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 				)...,
 			)
 		},
