@@ -18,8 +18,9 @@ import (
 
 var _ = Describe("Topic controller", func() {
 	Context("When creating a Topic resource", func() {
+		const projectID = "topic-project"
 		It("Should create a Pub/Sub Topic", func(ctx context.Context) {
-			psClient, err := pubsub.NewClient(ctx, "my-project",
+			psClient, err := pubsub.NewClient(ctx, projectID,
 				option.WithEndpoint(psServer.Addr),
 				option.WithoutAuthentication(),
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
@@ -37,7 +38,7 @@ var _ = Describe("Topic controller", func() {
 					Namespace: "default",
 				},
 				Spec: googlecloudpubsuboperatorv1.TopicSpec{
-					ProjectID: "my-project",
+					ProjectID: projectID,
 					TopicID:   "my-topic",
 				},
 			}

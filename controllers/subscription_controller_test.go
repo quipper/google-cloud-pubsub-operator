@@ -18,8 +18,9 @@ import (
 
 var _ = Describe("Subscription controller", func() {
 	Context("When creating a Topic resource", func() {
+		const projectID = "subscription-project"
 		It("Should create a Pub/Sub Subscription", func(ctx context.Context) {
-			psClient, err := pubsub.NewClient(ctx, "my-project",
+			psClient, err := pubsub.NewClient(ctx, projectID,
 				option.WithEndpoint(psServer.Addr),
 				option.WithoutAuthentication(),
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
@@ -41,9 +42,9 @@ var _ = Describe("Subscription controller", func() {
 					Namespace: "default",
 				},
 				Spec: googlecloudpubsuboperatorv1.SubscriptionSpec{
-					SubscriptionProjectID: "my-project",
+					SubscriptionProjectID: projectID,
 					SubscriptionID:        "my-subscription",
-					TopicProjectID:        "my-project",
+					TopicProjectID:        projectID,
 					TopicID:               topicID,
 				},
 			}
