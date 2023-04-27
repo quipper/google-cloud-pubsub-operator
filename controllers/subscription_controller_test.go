@@ -17,7 +17,7 @@ import (
 )
 
 var _ = Describe("Subscription controller", func() {
-	Context("When creating a Topic resource", func() {
+	Context("When creating a Subscription resource", func() {
 		const projectID = "subscription-project"
 		It("Should create a Pub/Sub Subscription", func(ctx context.Context) {
 			psClient, err := pubsub.NewClient(ctx, projectID,
