@@ -16,10 +16,10 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-var _ = Describe("Topic controller", func() {
-	Context("When creating a Topic resource", func() {
-		const projectID = "topic-project"
-		It("Should create a Pub/Sub Topic", func(ctx context.Context) {
+var _ = Describe("Subscription controller", func() {
+	Context("When creating a Subscription resource", func() {
+		const projectID = "subscription-project"
+		It("Should create a Pub/Sub Subscription", func(ctx context.Context) {
 			psClient, err := pubsub.NewClient(ctx, projectID,
 				option.WithEndpoint(psServer.Addr),
 				option.WithoutAuthentication(),
@@ -27,28 +27,34 @@ var _ = Describe("Topic controller", func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			By("Creating a Topic")
-			topic := &googlecloudpubsuboperatorv1.Topic{
+			topicID := "my-topic"
+			_, err = psClient.CreateTopic(ctx, topicID)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Creating a Subscription")
+			topic := &googlecloudpubsuboperatorv1.Subscription{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "googlecloudpubsuboperator.quipper.github.io/v1",
-					Kind:       "Topic",
+					Kind:       "Subscription",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "example",
 					Namespace: "default",
 				},
-				Spec: googlecloudpubsuboperatorv1.TopicSpec{
-					ProjectID: projectID,
-					TopicID:   "my-topic",
+				Spec: googlecloudpubsuboperatorv1.SubscriptionSpec{
+					SubscriptionProjectID: projectID,
+					SubscriptionID:        "my-subscription",
+					TopicProjectID:        projectID,
+					TopicID:               topicID,
 				},
 			}
 			Expect(k8sClient.Create(ctx, topic)).Should(Succeed())
 
-			By("Checking if the Topic exists")
+			By("Checking if the Subscription exists")
 			Eventually(func(g Gomega) {
-				topicExists, err := psClient.Topic("my-topic").Exists(ctx)
+				subscriptionExists, err := psClient.Subscription("my-subscription").Exists(ctx)
 				g.Expect(err).ShouldNot(HaveOccurred())
-				g.Expect(topicExists).Should(BeTrue())
+				g.Expect(subscriptionExists).Should(BeTrue())
 			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
 		})
 	})

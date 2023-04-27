@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
+	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -37,7 +38,8 @@ const subscriptionFinalizerName = "subscription.googlecloudpubsuboperator.quippe
 // SubscriptionReconciler reconciles a Subscription object
 type SubscriptionReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	NewClient func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error)
 }
 
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
@@ -73,7 +75,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		// The object is being deleted
 		if controllerutil.ContainsFinalizer(&subscription, subscriptionFinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
-			if err := deleteSubscription(ctx, subscription); err != nil {
+			if err := r.deleteSubscription(ctx, subscription); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
 				return ctrl.Result{}, err
@@ -90,7 +92,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, nil
 	}
 
-	s, err := createSubscription(ctx, subscription)
+	s, err := r.createSubscription(ctx, subscription)
 	if err != nil {
 		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
 			// don't treat as error
@@ -113,8 +115,9 @@ func (r *SubscriptionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func createSubscription(ctx context.Context, subscription googlecloudpubsuboperatorv1.Subscription) (*pubsub.Subscription, error) {
-	c, err := pubsub.NewClient(ctx, subscription.Spec.SubscriptionProjectID)
+func (r *SubscriptionReconciler) createSubscription(ctx context.Context, subscription googlecloudpubsuboperatorv1.Subscription) (*pubsub.Subscription, error) {
+	c, err := r.NewClient(ctx,
+		subscription.Spec.SubscriptionProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
 	}
@@ -132,8 +135,8 @@ func createSubscription(ctx context.Context, subscription googlecloudpubsubopera
 	return s, nil
 }
 
-func deleteSubscription(ctx context.Context, subscription googlecloudpubsuboperatorv1.Subscription) error {
-	c, err := pubsub.NewClient(ctx, subscription.Spec.SubscriptionProjectID)
+func (r *SubscriptionReconciler) deleteSubscription(ctx context.Context, subscription googlecloudpubsuboperatorv1.Subscription) error {
+	c, err := r.NewClient(ctx, subscription.Spec.SubscriptionProjectID)
 	if err != nil {
 		return fmt.Errorf("pubsub.NewClient: %w", err)
 	}

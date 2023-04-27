@@ -95,24 +95,27 @@ var _ = BeforeSuite(func() {
 		Expect(psServer.Close()).Should(Succeed())
 	})
 
+	newClient := func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error) {
+		return pubsub.NewClient(ctx, projectID,
+			append(opts,
+				option.WithEndpoint(psServer.Addr),
+				option.WithoutAuthentication(),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
+			)...,
+		)
+	}
+
 	err = (&TopicReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
-		NewClient: func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error) {
-			return pubsub.NewClient(ctx, projectID,
-				append(opts,
-					option.WithEndpoint(psServer.Addr),
-					option.WithoutAuthentication(),
-					option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-				)...,
-			)
-		},
+		Client:    k8sManager.GetClient(),
+		Scheme:    k8sManager.GetScheme(),
+		NewClient: newClient,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&SubscriptionReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
+		Client:    k8sManager.GetClient(),
+		Scheme:    k8sManager.GetScheme(),
+		NewClient: newClient,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
