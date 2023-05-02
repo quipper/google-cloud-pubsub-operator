@@ -2,8 +2,6 @@ name: manifest
 
 on:
   pull_request:
-    branches:
-      - main
     paths:
       - config/**
       - .github/workflows/manifest.yaml
