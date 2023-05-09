@@ -34,7 +34,7 @@ import (
 
 	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 	pubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
-	"github.com/quipper/google-cloud-pubsub-operator/controllers"
+	"github.com/quipper/google-cloud-pubsub-operator/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -92,7 +92,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.TopicReconciler{
+	if err = (&controller.TopicReconciler{
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		NewClient: pubsub.NewClient,
@@ -100,7 +100,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Topic")
 		os.Exit(1)
 	}
-	if err = (&controllers.SubscriptionReconciler{
+	if err = (&controller.SubscriptionReconciler{
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		NewClient: pubsub.NewClient,

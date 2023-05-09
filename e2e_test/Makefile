@@ -19,7 +19,7 @@ deploy:
 	kustomize build controller | kubectl apply -f -
 	kubectl -n $(PROJECT_NAME)-system rollout status deployment $(PROJECT_NAME)-controller-manager
 	kubectl -n $(PROJECT_NAME)-system get deployment
-	kubectl apply -f ../config/samples
+	kustomize build ../config/samples | kubectl apply -f -
 
 test:
 	echo TODO
