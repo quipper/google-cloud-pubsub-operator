@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -90,6 +91,13 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
+	topicPatch := crclient.MergeFrom(topic.DeepCopy())
+	topic.Status.Phase = "Creating"
+	if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
+		logger.Error(err, "unable to update Tunnel status")
+		return ctrl.Result{}, err
+	}
+
 	t, err := r.createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
 	if err != nil {
 		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
@@ -98,11 +106,22 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, nil
 		}
 
+		topicPatch := crclient.MergeFrom(topic.DeepCopy())
+		topic.Status.Phase = "Error"
+		if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
+			logger.Error(err, "unable to update Tunnel status")
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, err
 	}
 
 	logger.Info(fmt.Sprintf("Topic created: %v", t.ID()), "topic", topic)
-
+	topicPatch = crclient.MergeFrom(topic.DeepCopy())
+	topic.Status.Phase = "Active" // TODO: extract const
+	if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
+		logger.Error(err, "unable to update Tunnel status")
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 

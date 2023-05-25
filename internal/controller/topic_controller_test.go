@@ -7,12 +7,12 @@ import (
 	"cloud.google.com/go/pubsub"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -43,6 +43,13 @@ var _ = Describe("Topic controller", func() {
 				},
 			}
 			Expect(k8sClient.Create(ctx, topic)).Should(Succeed())
+
+			By("Checking if the status is Creating")
+			Eventually(func(g Gomega) {
+				var topic googlecloudpubsuboperatorv1.Topic
+				g.Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: "default", Name: "example"}, &topic)).Should(Succeed())
+				g.Expect(topic.Status.Phase).Should(Equal("Creating"))
+			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
 
 			By("Checking if the Topic exists")
 			Eventually(func(g Gomega) {
