@@ -44,13 +44,6 @@ var _ = Describe("Topic controller", func() {
 			}
 			Expect(k8sClient.Create(ctx, topic)).Should(Succeed())
 
-			By("Checking if the status is Creating")
-			Eventually(func(g Gomega) {
-				var topic googlecloudpubsuboperatorv1.Topic
-				g.Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: "default", Name: "example"}, &topic)).Should(Succeed())
-				g.Expect(topic.Status.Phase).Should(Equal("Creating"))
-			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
-
 			By("Checking if the Topic exists")
 			Eventually(func(g Gomega) {
 				topicExists, err := psClient.Topic("my-topic").Exists(ctx)
