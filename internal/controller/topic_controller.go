@@ -91,16 +91,6 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	existTopic, err := r.existTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
-	if err != nil {
-		logger.Error(err, "unable to check existence of topic")
-		return ctrl.Result{}, err
-	}
-	if existTopic {
-		logger.Info("Topic already exists in Cloud Pub/Sub")
-		return ctrl.Result{}, nil
-	}
-
 	topicPatch := crclient.MergeFrom(topic.DeepCopy())
 	topic.Status.Phase = "Creating"
 	if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
@@ -114,6 +104,13 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
 			// don't treat as error
 			logger.Info("Topic already exists in Cloud Pub/Sub", "error", err)
+			topicPatch = crclient.MergeFrom(topic.DeepCopy())
+			topic.Status.Phase = "Active" // TODO: extract const
+			if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
+				logger.Error(err, "unable to update status")
+				return ctrl.Result{}, err
+			}
+			logger.Info("Topic status has been patched to Active")
 			return ctrl.Result{}, nil
 		}
 
@@ -142,20 +139,6 @@ func (r *TopicReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&googlecloudpubsuboperatorv1.Topic{}).
 		Complete(r)
-}
-
-func (r *TopicReconciler) existTopic(ctx context.Context, projectID, topicID string) (bool, error) {
-	c, err := r.NewClient(ctx, projectID)
-	if err != nil {
-		return false, fmt.Errorf("pubsub.NewClient: %w", err)
-	}
-	defer c.Close()
-
-	exists, err := c.Topic(topicID).Exists(ctx)
-	if err != nil {
-		return false, fmt.Errorf("exists error: %w", err)
-	}
-	return exists, err
 }
 
 func (r *TopicReconciler) createTopic(ctx context.Context, projectID, topicID string) (*pubsub.Topic, error) {
