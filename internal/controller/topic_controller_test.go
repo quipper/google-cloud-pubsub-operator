@@ -57,6 +57,13 @@ var _ = Describe("Topic controller", func() {
 				g.Expect(err).ShouldNot(HaveOccurred())
 				g.Expect(topicExists).Should(BeTrue())
 			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
+
+			By("Checking if the status is Active")
+			Eventually(func(g Gomega) {
+				var topic googlecloudpubsuboperatorv1.Topic
+				g.Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: "default", Name: "example"}, &topic)).Should(Succeed())
+				g.Expect(topic.Status.Phase).Should(Equal("Active"))
+			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
 		})
 	})
 })
