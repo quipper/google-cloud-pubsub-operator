@@ -91,20 +91,12 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	topicPatch := crclient.MergeFrom(topic.DeepCopy())
-	topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseCreating
-	if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
-		logger.Error(err, "unable to update status")
-		return ctrl.Result{}, err
-	}
-	logger.Info("Topic status has been patched to Creating")
-
 	t, err := r.createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
 	if err != nil {
 		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
 			// don't treat as error
 			logger.Info("Topic already exists in Cloud Pub/Sub", "error", err)
-			topicPatch = crclient.MergeFrom(topic.DeepCopy())
+			topicPatch := crclient.MergeFrom(topic.DeepCopy())
 			topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseActive
 			if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
 				logger.Error(err, "unable to update status")
@@ -124,7 +116,7 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 	logger.Info("Created topic into Cloud Pub/Sub", "id", t.ID())
 
-	topicPatch = crclient.MergeFrom(topic.DeepCopy())
+	topicPatch := crclient.MergeFrom(topic.DeepCopy())
 	topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseActive
 	if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
 		logger.Error(err, "unable to update status")

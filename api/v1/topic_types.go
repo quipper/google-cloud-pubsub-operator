@@ -37,9 +37,8 @@ type TopicStatus struct {
 type TopicStatusPhase string
 
 const (
-	TopicStatusPhaseCreating TopicStatusPhase = "Creating"
-	TopicStatusPhaseActive   TopicStatusPhase = "Active"
-	TopicStatusPhaseError    TopicStatusPhase = "Error"
+	TopicStatusPhaseActive TopicStatusPhase = "Active"
+	TopicStatusPhaseError  TopicStatusPhase = "Error"
 )
 
 //+kubebuilder:object:root=true

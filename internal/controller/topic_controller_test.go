@@ -34,8 +34,8 @@ var _ = Describe("Topic controller", func() {
 					Kind:       "Topic",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "example",
-					Namespace: "default",
+					GenerateName: "example-",
+					Namespace:    "default",
 				},
 				Spec: googlecloudpubsuboperatorv1.TopicSpec{
 					ProjectID: projectID,
@@ -43,6 +43,7 @@ var _ = Describe("Topic controller", func() {
 				},
 			}
 			Expect(k8sClient.Create(ctx, topic)).Should(Succeed())
+			topicRef := types.NamespacedName{Namespace: topic.Namespace, Name: topic.Name}
 
 			By("Checking if the Topic exists")
 			Eventually(func(g Gomega) {
@@ -54,8 +55,37 @@ var _ = Describe("Topic controller", func() {
 			By("Checking if the status is Active")
 			Eventually(func(g Gomega) {
 				var topic googlecloudpubsuboperatorv1.Topic
-				g.Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: "default", Name: "example"}, &topic)).Should(Succeed())
+				g.Expect(k8sClient.Get(ctx, topicRef, &topic)).Should(Succeed())
 				g.Expect(topic.Status.Phase).Should(Equal(googlecloudpubsuboperatorv1.TopicStatusPhaseActive))
+			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
+		})
+
+		It("Should update the status if error", func(ctx context.Context) {
+			By("Creating a Topic")
+			topic := &googlecloudpubsuboperatorv1.Topic{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "googlecloudpubsuboperator.quipper.github.io/v1",
+					Kind:       "Topic",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "example-",
+					Namespace:    "default",
+				},
+				Spec: googlecloudpubsuboperatorv1.TopicSpec{
+					ProjectID: projectID,
+					// FIXME: fake server does not reject "goog" topic!
+					// https://cloud.google.com/pubsub/docs/admin#resource_names
+					TopicID: "goog-this-is-invalid",
+				},
+			}
+			Expect(k8sClient.Create(ctx, topic)).Should(Succeed())
+			topicRef := types.NamespacedName{Namespace: topic.Namespace, Name: topic.Name}
+
+			By("Checking if the status is Error")
+			Eventually(func(g Gomega) {
+				var topic googlecloudpubsuboperatorv1.Topic
+				g.Expect(k8sClient.Get(ctx, topicRef, &topic)).Should(Succeed())
+				g.Expect(topic.Status.Phase).Should(Equal(googlecloudpubsuboperatorv1.TopicStatusPhaseError))
 			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
 		})
 	})
