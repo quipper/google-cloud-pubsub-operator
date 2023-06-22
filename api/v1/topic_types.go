@@ -31,8 +31,16 @@ type TopicSpec struct {
 
 // TopicStatus defines the observed state of Topic
 type TopicStatus struct {
-	Phase string `json:"phase,omitempty"`
+	Phase TopicStatusPhase `json:"phase,omitempty"`
 }
+
+type TopicStatusPhase string
+
+const (
+	TopicStatusPhaseCreating TopicStatusPhase = "Creating"
+	TopicStatusPhaseActive   TopicStatusPhase = "Active"
+	TopicStatusPhaseError    TopicStatusPhase = "Error"
+)
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
