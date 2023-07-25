@@ -3,7 +3,7 @@ module github.com/quipper/google-cloud-pubsub-operator
 go 1.19
 
 require (
-	cloud.google.com/go/pubsub v1.32.0
+	cloud.google.com/go/pubsub v1.33.0
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
 	google.golang.org/api v0.132.0
