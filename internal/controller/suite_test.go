@@ -19,15 +19,19 @@ package controller
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/apiv1/pubsubpb"
 	"cloud.google.com/go/pubsub/pstest"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -90,7 +94,9 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	psServer = pstest.NewServer()
+	psServer = pstest.NewServer(
+		createTopicErrorInjectionReactor(),
+	)
 	DeferCleanup(func() {
 		Expect(psServer.Close()).Should(Succeed())
 	})
@@ -125,3 +131,24 @@ var _ = BeforeSuite(func() {
 		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
 	}()
 })
+
+func createTopicErrorInjectionReactor() pstest.ServerReactorOption {
+	return pstest.ServerReactorOption{
+		FuncName: "CreateTopic",
+		Reactor: errorInjectionReactorFunc(func(req interface{}) (bool, interface{}, error) {
+			topic, ok := req.(*pubsubpb.Topic)
+			if ok {
+				if strings.HasPrefix(topic.Name, "projects/error-injected-") {
+					return true, nil, status.Errorf(codes.InvalidArgument, "error injected")
+				}
+			}
+			return false, nil, nil
+		}),
+	}
+}
+
+type errorInjectionReactorFunc func(req interface{}) (bool, interface{}, error)
+
+func (r errorInjectionReactorFunc) React(req interface{}) (bool, interface{}, error) {
+	return r(req)
+}

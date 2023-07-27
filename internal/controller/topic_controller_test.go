@@ -18,8 +18,8 @@ import (
 
 var _ = Describe("Topic controller", func() {
 	Context("When creating a Topic resource", func() {
-		const projectID = "topic-project"
 		It("Should create a Pub/Sub Topic", func(ctx context.Context) {
+			const projectID = "topic-project-1"
 			psClient, err := pubsub.NewClient(ctx, projectID,
 				option.WithEndpoint(psServer.Addr),
 				option.WithoutAuthentication(),
@@ -61,6 +61,8 @@ var _ = Describe("Topic controller", func() {
 		})
 
 		It("Should update the status if error", func(ctx context.Context) {
+			const projectID = "error-injected-project-1"
+
 			By("Creating a Topic")
 			topic := &googlecloudpubsuboperatorv1.Topic{
 				TypeMeta: metav1.TypeMeta{
@@ -73,9 +75,7 @@ var _ = Describe("Topic controller", func() {
 				},
 				Spec: googlecloudpubsuboperatorv1.TopicSpec{
 					ProjectID: projectID,
-					// FIXME: fake server does not reject "goog" topic!
-					// https://cloud.google.com/pubsub/docs/admin#resource_names
-					TopicID: "goog-this-is-invalid",
+					TopicID:   "this-should-be-failed",
 				},
 			}
 			Expect(k8sClient.Create(ctx, topic)).Should(Succeed())
