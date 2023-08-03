@@ -22,11 +22,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
-	"google.golang.org/api/option"
-	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -37,9 +35,9 @@ const subscriptionFinalizerName = "subscription.googlecloudpubsuboperator.quippe
 
 // SubscriptionReconciler reconciles a Subscription object
 type SubscriptionReconciler struct {
-	client.Client
+	crclient.Client
 	Scheme    *runtime.Scheme
-	NewClient func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error)
+	NewClient newPubSubClientFunc
 }
 
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
@@ -55,7 +53,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return ctrl.Result{}, crclient.IgnoreNotFound(err)
 	}
 
 	logger.Info("Found the subscription", "subscription", subscription)
@@ -94,7 +92,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	s, err := r.createSubscription(ctx, subscription)
 	if err != nil {
-		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
+		if isPubSubAlreadyExistsError(err) {
 			// don't treat as error
 			logger.Info("PubSub subscription already exists")
 			return ctrl.Result{}, nil
@@ -144,7 +142,7 @@ func (r *SubscriptionReconciler) deleteSubscription(ctx context.Context, subscri
 
 	err = c.Subscription(subscription.Spec.SubscriptionID).Delete(ctx)
 	if err != nil {
-		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.NotFound {
+		if isPubSubNotFoundError(err) {
 			// for idempotent
 			return nil
 		}
