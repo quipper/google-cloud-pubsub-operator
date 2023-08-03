@@ -25,9 +25,8 @@ import (
 	"cloud.google.com/go/pubsub/pstest"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/quipper/google-cloud-pubsub-operator/internal/pubsubtest"
 	"google.golang.org/api/option"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -90,19 +89,15 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	psServer = pstest.NewServer()
+	psServer = pstest.NewServer(
+		pubsubtest.CreateTopicErrorInjectionReactor(),
+	)
 	DeferCleanup(func() {
 		Expect(psServer.Close()).Should(Succeed())
 	})
 
 	newClient := func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error) {
-		return pubsub.NewClient(ctx, projectID,
-			append(opts,
-				option.WithEndpoint(psServer.Addr),
-				option.WithoutAuthentication(),
-				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-			)...,
-		)
+		return pubsubtest.NewClient(ctx, projectID, psServer)
 	}
 
 	err = (&TopicReconciler{

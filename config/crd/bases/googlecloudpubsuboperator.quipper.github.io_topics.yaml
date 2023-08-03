@@ -44,6 +44,9 @@ spec:
             type: object
           status:
             description: TopicStatus defines the observed state of Topic
+            properties:
+              phase:
+                type: string
             type: object
         type: object
     served: true

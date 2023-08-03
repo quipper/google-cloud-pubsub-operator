@@ -4,14 +4,10 @@ import (
 	"context"
 	"time"
 
-	"cloud.google.com/go/pubsub"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/api/option"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
+	"github.com/quipper/google-cloud-pubsub-operator/internal/pubsubtest"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	//+kubebuilder:scaffold:imports
 )
@@ -20,11 +16,7 @@ var _ = Describe("Subscription controller", func() {
 	Context("When creating a Subscription resource", func() {
 		const projectID = "subscription-project"
 		It("Should create a Pub/Sub Subscription", func(ctx context.Context) {
-			psClient, err := pubsub.NewClient(ctx, projectID,
-				option.WithEndpoint(psServer.Addr),
-				option.WithoutAuthentication(),
-				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-			)
+			psClient, err := pubsubtest.NewClient(ctx, projectID, psServer)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			topicID := "my-topic"

@@ -21,11 +21,9 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/pubsub"
-	"google.golang.org/api/option"
-	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -34,9 +32,9 @@ import (
 
 // TopicReconciler reconciles a Topic object
 type TopicReconciler struct {
-	client.Client
+	crclient.Client
 	Scheme    *runtime.Scheme
-	NewClient func(ctx context.Context, projectID string, opts ...option.ClientOption) (c *pubsub.Client, err error)
+	NewClient newPubSubClientFunc
 }
 
 const topicFinalizerName = "topic.googlecloudpubsuboperator.quipper.github.io/finalizer"
@@ -54,9 +52,9 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return ctrl.Result{}, crclient.IgnoreNotFound(err)
 	}
-	logger.Info("Found the topic", "topic", topic)
+	logger.Info("Found Topic resource")
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if topic.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -92,17 +90,36 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	t, err := r.createTopic(ctx, topic.Spec.ProjectID, topic.Spec.TopicID)
 	if err != nil {
-		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.AlreadyExists {
+		if isPubSubAlreadyExistsError(err) {
 			// don't treat as error
-			logger.Info("PubSub topic already exists")
+			logger.Info("Topic already exists in Cloud Pub/Sub", "error", err)
+			topicPatch := crclient.MergeFrom(topic.DeepCopy())
+			topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseActive
+			if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
+				logger.Error(err, "unable to update status")
+				return ctrl.Result{}, err
+			}
+			logger.Info("Topic status has been patched to Active")
 			return ctrl.Result{}, nil
 		}
 
+		topicPatch := crclient.MergeFrom(topic.DeepCopy())
+		topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseError
+		if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
+			logger.Error(err, "unable to update status")
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, err
 	}
+	logger.Info("Created topic into Cloud Pub/Sub", "id", t.ID())
 
-	logger.Info(fmt.Sprintf("Topic created: %v", t.ID()), "topic", topic)
-
+	topicPatch := crclient.MergeFrom(topic.DeepCopy())
+	topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseActive
+	if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
+		logger.Error(err, "unable to update status")
+		return ctrl.Result{}, err
+	}
+	logger.Info("Topic status has been patched to Active")
 	return ctrl.Result{}, nil
 }
 
@@ -136,7 +153,7 @@ func (r *TopicReconciler) deleteTopic(ctx context.Context, projectID, topicID st
 	defer c.Close()
 
 	if err := c.Topic(topicID).Delete(ctx); err != nil {
-		if gs, ok := gRPCStatusFromError(err); ok && gs.Code() == codes.NotFound {
+		if isPubSubNotFoundError(err) {
 			// for idempotent
 			return nil
 		}

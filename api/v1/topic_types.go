@@ -31,9 +31,15 @@ type TopicSpec struct {
 
 // TopicStatus defines the observed state of Topic
 type TopicStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Phase TopicStatusPhase `json:"phase,omitempty"`
 }
+
+type TopicStatusPhase string
+
+const (
+	TopicStatusPhaseActive TopicStatusPhase = "Active"
+	TopicStatusPhaseError  TopicStatusPhase = "Error"
+)
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
