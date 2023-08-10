@@ -1,6 +1,6 @@
 module github.com/quipper/google-cloud-pubsub-operator
 
-go 1.19
+go 1.21
 
 require (
 	cloud.google.com/go/pubsub v1.33.0
