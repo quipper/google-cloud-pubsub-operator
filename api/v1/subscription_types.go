@@ -37,9 +37,15 @@ type SubscriptionSpec struct {
 
 // SubscriptionStatus defines the observed state of Subscription
 type SubscriptionStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Phase SubscriptionStatusPhase `json:"phase,omitempty"`
 }
+
+type SubscriptionStatusPhase string
+
+const (
+	SubscriptionStatusPhaseActive SubscriptionStatusPhase = "Active"
+	SubscriptionStatusPhaseError  SubscriptionStatusPhase = "Error"
+)
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status

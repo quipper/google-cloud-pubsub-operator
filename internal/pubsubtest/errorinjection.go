@@ -24,6 +24,21 @@ func CreateTopicErrorInjectionReactor() pstest.ServerReactorOption {
 	}
 }
 
+func CreateSubscriptionErrorInjectionReactor() pstest.ServerReactorOption {
+	return pstest.ServerReactorOption{
+		FuncName: "CreateSubscription",
+		Reactor: errorInjectionReactorFunc(func(req interface{}) (bool, interface{}, error) {
+			topic, ok := req.(*pubsubpb.Topic)
+			if ok {
+				if strings.HasPrefix(topic.Name, "projects/error-injected-") {
+					return true, nil, status.Errorf(codes.InvalidArgument, "error injected")
+				}
+			}
+			return false, nil, nil
+		}),
+	}
+}
+
 type errorInjectionReactorFunc func(req interface{}) (bool, interface{}, error)
 
 func (r errorInjectionReactorFunc) React(req interface{}) (bool, interface{}, error) {

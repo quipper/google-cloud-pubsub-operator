@@ -54,7 +54,7 @@ var _ = Describe("Topic controller", func() {
 		})
 
 		It("Should update the status if error", func(ctx context.Context) {
-			const projectID = "error-injected-project-1"
+			const projectID = "error-injected-project-topic-1"
 
 			By("Creating a Topic")
 			topic := &googlecloudpubsuboperatorv1.Topic{

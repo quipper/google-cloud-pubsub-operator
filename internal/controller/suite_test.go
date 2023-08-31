@@ -91,6 +91,7 @@ var _ = BeforeSuite(func() {
 
 	psServer = pstest.NewServer(
 		pubsubtest.CreateTopicErrorInjectionReactor(),
+		pubsubtest.CreateSubscriptionErrorInjectionReactor(),
 	)
 	DeferCleanup(func() {
 		Expect(psServer.Close()).Should(Succeed())
