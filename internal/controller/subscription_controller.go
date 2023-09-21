@@ -55,8 +55,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		// on deleted requests.
 		return ctrl.Result{}, crclient.IgnoreNotFound(err)
 	}
-
-	logger.Info("Found the subscription", "subscription", subscription)
+	logger.Info("Found the subscription resource")
 
 	// examine DeletionTimestamp to determine if object is under deletion
 	if subscription.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -95,14 +94,34 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if isPubSubAlreadyExistsError(err) {
 			// don't treat as error
 			logger.Info("PubSub subscription already exists")
+			subscriptionPatch := crclient.MergeFrom(subscription.DeepCopy())
+			subscription.Status.Phase = googlecloudpubsuboperatorv1.SubscriptionStatusPhaseActive
+			if err := r.Client.Status().Patch(ctx, &subscription, subscriptionPatch); err != nil {
+				logger.Error(err, "unable to update status")
+				return ctrl.Result{}, err
+			}
+			logger.Info("Subscription status has been patched to Active")
 			return ctrl.Result{}, nil
 		}
 
+		subscriptionPatch := crclient.MergeFrom(subscription.DeepCopy())
+		subscription.Status.Phase = googlecloudpubsuboperatorv1.SubscriptionStatusPhaseError
+		if err := r.Client.Status().Patch(ctx, &subscription, subscriptionPatch); err != nil {
+			logger.Error(err, "unable to update status")
+			return ctrl.Result{}, err
+		}
+		logger.Info("Subscription status has been patched to Error")
 		return ctrl.Result{}, err
 	}
-
 	logger.Info(fmt.Sprintf("Subscription created: %v", s.ID()), "subscription", subscription)
 
+	subscriptionPatch := crclient.MergeFrom(subscription.DeepCopy())
+	subscription.Status.Phase = googlecloudpubsuboperatorv1.SubscriptionStatusPhaseActive
+	if err := r.Client.Status().Patch(ctx, &subscription, subscriptionPatch); err != nil {
+		logger.Error(err, "unable to update status")
+		return ctrl.Result{}, err
+	}
+	logger.Info("Subscription status has been patched to Active")
 	return ctrl.Result{}, nil
 }
 
