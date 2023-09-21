@@ -50,6 +50,7 @@ var _ = Describe("Topic controller", func() {
 				var topic googlecloudpubsuboperatorv1.Topic
 				g.Expect(k8sClient.Get(ctx, topicRef, &topic)).Should(Succeed())
 				g.Expect(topic.Status.Phase).Should(Equal(googlecloudpubsuboperatorv1.TopicStatusPhaseActive))
+				g.Expect(topic.Status.Message).Should(BeEmpty())
 			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
 		})
 
@@ -79,6 +80,7 @@ var _ = Describe("Topic controller", func() {
 				var topic googlecloudpubsuboperatorv1.Topic
 				g.Expect(k8sClient.Get(ctx, topicRef, &topic)).Should(Succeed())
 				g.Expect(topic.Status.Phase).Should(Equal(googlecloudpubsuboperatorv1.TopicStatusPhaseError))
+				g.Expect(topic.Status.Message).Should(HavePrefix("Pub/Sub error:"))
 			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
 		})
 	})
