@@ -5,7 +5,7 @@ go 1.21
 require (
 	cloud.google.com/go/pubsub v1.33.0
 	github.com/onsi/ginkgo/v2 v2.12.1
-	github.com/onsi/gomega v1.27.10
+	github.com/onsi/gomega v1.28.0
 	google.golang.org/api v0.143.0
 	google.golang.org/grpc v1.58.2
 	k8s.io/apimachinery v0.28.2
