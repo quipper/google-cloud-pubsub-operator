@@ -95,6 +95,7 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			logger.Info("Topic already exists in Cloud Pub/Sub", "error", err)
 			topicPatch := crclient.MergeFrom(topic.DeepCopy())
 			topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseActive
+			topic.Status.Message = ""
 			if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
 				logger.Error(err, "unable to update status")
 				return ctrl.Result{}, err
@@ -105,6 +106,7 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 		topicPatch := crclient.MergeFrom(topic.DeepCopy())
 		topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseError
+		topic.Status.Message = fmt.Sprintf("Pub/Sub error: %s", err)
 		if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
 			logger.Error(err, "unable to update status")
 			return ctrl.Result{}, err
@@ -115,6 +117,7 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	topicPatch := crclient.MergeFrom(topic.DeepCopy())
 	topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseActive
+	topic.Status.Message = ""
 	if err := r.Client.Status().Patch(ctx, &topic, topicPatch); err != nil {
 		logger.Error(err, "unable to update status")
 		return ctrl.Result{}, err

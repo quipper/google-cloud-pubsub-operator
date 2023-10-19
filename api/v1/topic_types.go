@@ -32,6 +32,10 @@ type TopicSpec struct {
 // TopicStatus defines the observed state of Topic
 type TopicStatus struct {
 	Phase TopicStatusPhase `json:"phase,omitempty"`
+
+	// Message is an error message of Cloud Pub/Sub.
+	// Available only if Phase is Error.
+	Message string `json:"message,omitempty"`
 }
 
 type TopicStatusPhase string

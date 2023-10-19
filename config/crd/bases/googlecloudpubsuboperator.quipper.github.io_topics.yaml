@@ -44,6 +44,10 @@ spec:
           status:
             description: TopicStatus defines the observed state of Topic
             properties:
+              message:
+                description: Message is an error message of Cloud Pub/Sub. Available
+                  only if Phase is Error.
+                type: string
               phase:
                 type: string
             type: object
