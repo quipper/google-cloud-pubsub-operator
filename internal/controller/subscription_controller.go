@@ -23,6 +23,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -38,11 +39,13 @@ type SubscriptionReconciler struct {
 	crclient.Client
 	Scheme    *runtime.Scheme
 	NewClient newPubSubClientFunc
+	Recorder  record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions/finalizers,verbs=update
+//+kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
@@ -104,6 +107,8 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{}, nil
 		}
 
+		r.Recorder.Event(&subscription, "Warning", "SubscriptionCreateError",
+			fmt.Sprintf("Failed to create Subscription in Pub/Sub: %s", err))
 		subscriptionPatch := crclient.MergeFrom(subscription.DeepCopy())
 		subscription.Status.Phase = googlecloudpubsuboperatorv1.SubscriptionStatusPhaseError
 		if err := r.Client.Status().Patch(ctx, &subscription, subscriptionPatch); err != nil {

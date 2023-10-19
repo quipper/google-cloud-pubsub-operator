@@ -96,6 +96,7 @@ func main() {
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		NewClient: pubsub.NewClient,
+		Recorder:  mgr.GetEventRecorderFor("topic-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Topic")
 		os.Exit(1)
@@ -104,6 +105,7 @@ func main() {
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		NewClient: pubsub.NewClient,
+		Recorder:  mgr.GetEventRecorderFor("subscription-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Subscription")
 		os.Exit(1)
