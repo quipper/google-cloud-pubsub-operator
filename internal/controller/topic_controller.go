@@ -22,6 +22,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -35,6 +36,7 @@ type TopicReconciler struct {
 	crclient.Client
 	Scheme    *runtime.Scheme
 	NewClient newPubSubClientFunc
+	Recorder  record.EventRecorder
 }
 
 const topicFinalizerName = "topic.googlecloudpubsuboperator.quipper.github.io/finalizer"
@@ -42,6 +44,7 @@ const topicFinalizerName = "topic.googlecloudpubsuboperator.quipper.github.io/fi
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics/finalizers,verbs=update
+//+kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
@@ -104,6 +107,8 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, nil
 		}
 
+		r.Recorder.Event(&topic, "Warning", "TopicCreateError",
+			fmt.Sprintf("Failed to create Topic in Pub/Sub: %s", err))
 		topicPatch := crclient.MergeFrom(topic.DeepCopy())
 		topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseError
 		topic.Status.Message = fmt.Sprintf("Pub/Sub error: %s", err)

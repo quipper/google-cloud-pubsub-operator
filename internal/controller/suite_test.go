@@ -104,6 +104,7 @@ var _ = BeforeSuite(func() {
 		Client:    k8sManager.GetClient(),
 		Scheme:    k8sManager.GetScheme(),
 		NewClient: newClient,
+		Recorder:  k8sManager.GetEventRecorderFor("topic-controller"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -111,6 +112,7 @@ var _ = BeforeSuite(func() {
 		Client:    k8sManager.GetClient(),
 		Scheme:    k8sManager.GetScheme(),
 		NewClient: newClient,
+		Recorder:  k8sManager.GetEventRecorderFor("subscription-controller"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
