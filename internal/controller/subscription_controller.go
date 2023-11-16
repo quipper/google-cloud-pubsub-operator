@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -107,7 +108,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{}, nil
 		}
 
-		r.Recorder.Event(&subscription, "Warning", "SubscriptionCreateError",
+		r.Recorder.Event(&subscription, corev1.EventTypeWarning, "SubscriptionCreateError",
 			fmt.Sprintf("Failed to create Subscription in Pub/Sub: %s", err))
 		subscriptionPatch := crclient.MergeFrom(subscription.DeepCopy())
 		subscription.Status.Phase = googlecloudpubsuboperatorv1.SubscriptionStatusPhaseError

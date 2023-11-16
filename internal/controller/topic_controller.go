@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/pubsub"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -107,7 +108,7 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, nil
 		}
 
-		r.Recorder.Event(&topic, "Warning", "TopicCreateError",
+		r.Recorder.Event(&topic, corev1.EventTypeWarning, "TopicCreateError",
 			fmt.Sprintf("Failed to create Topic in Pub/Sub: %s", err))
 		topicPatch := crclient.MergeFrom(topic.DeepCopy())
 		topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseError
