@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/pubsub v1.33.0
 	github.com/onsi/ginkgo/v2 v2.13.1
 	github.com/onsi/gomega v1.30.0
-	google.golang.org/api v0.150.0
+	google.golang.org/api v0.151.0
 	google.golang.org/grpc v1.59.0
 	k8s.io/api v0.28.4
 	k8s.io/apimachinery v0.28.4
