@@ -23,15 +23,19 @@ import (
 // SubscriptionSpec defines the desired state of Subscription
 type SubscriptionSpec struct {
 	// subscription ID
+	//+kubebuilder:validation:XValidation:message="Immutable field",rule="self == oldSelf"
 	SubscriptionID string `json:"subscriptionID,omitempty"`
 
 	// project ID of subscription
+	//+kubebuilder:validation:XValidation:message="Immutable field",rule="self == oldSelf"
 	SubscriptionProjectID string `json:"subscriptionProjectID,omitempty"`
 
 	// topic ID
+	//+kubebuilder:validation:XValidation:message="Immutable field",rule="self == oldSelf"
 	TopicID string `json:"topicID,omitempty"`
 
 	// project ID of topic
+	//+kubebuilder:validation:XValidation:message="Immutable field",rule="self == oldSelf"
 	TopicProjectID string `json:"topicProjectID,omitempty"`
 }
 

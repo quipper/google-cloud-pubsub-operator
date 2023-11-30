@@ -37,15 +37,27 @@ spec:
               subscriptionID:
                 description: subscription ID
                 type: string
+                x-kubernetes-validations:
+                - message: Immutable field
+                  rule: self == oldSelf
               subscriptionProjectID:
                 description: project ID of subscription
                 type: string
+                x-kubernetes-validations:
+                - message: Immutable field
+                  rule: self == oldSelf
               topicID:
                 description: topic ID
                 type: string
+                x-kubernetes-validations:
+                - message: Immutable field
+                  rule: self == oldSelf
               topicProjectID:
                 description: project ID of topic
                 type: string
+                x-kubernetes-validations:
+                - message: Immutable field
+                  rule: self == oldSelf
             type: object
           status:
             description: SubscriptionStatus defines the observed state of Subscription

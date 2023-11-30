@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -35,12 +36,15 @@ import (
 
 const subscriptionFinalizerName = "subscription.googlecloudpubsuboperator.quipper.github.io/finalizer"
 
+const subscriptionCreationWarningDeadline = 10 * time.Minute
+
 // SubscriptionReconciler reconciles a Subscription object
 type SubscriptionReconciler struct {
 	crclient.Client
 	Scheme    *runtime.Scheme
 	NewClient newPubSubClientFunc
 	Recorder  record.EventRecorder
+	Clock     clock.PassiveClock
 }
 
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
@@ -108,8 +112,13 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{}, nil
 		}
 
-		r.Recorder.Event(&subscription, corev1.EventTypeWarning, "SubscriptionCreateError",
-			fmt.Sprintf("Failed to create Subscription in Pub/Sub: %s", err))
+		if r.Clock.Since(subscription.CreationTimestamp.Time) > subscriptionCreationWarningDeadline {
+			r.Recorder.Event(&subscription, corev1.EventTypeWarning, "SubscriptionCreateErrorDeadlineExceeded",
+				fmt.Sprintf("Failed to create Subscription for %s in Pub/Sub: %s", subscriptionCreationWarningDeadline, err))
+		} else {
+			r.Recorder.Event(&subscription, corev1.EventTypeNormal, "SubscriptionCreateError",
+				fmt.Sprintf("Failed to create Subscription in Pub/Sub: %s", err))
+		}
 		subscriptionPatch := crclient.MergeFrom(subscription.DeepCopy())
 		subscription.Status.Phase = googlecloudpubsuboperatorv1.SubscriptionStatusPhaseError
 		if err := r.Client.Status().Patch(ctx, &subscription, subscriptionPatch); err != nil {
