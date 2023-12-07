@@ -37,9 +37,15 @@ spec:
               projectID:
                 description: ID of project
                 type: string
+                x-kubernetes-validations:
+                - message: Immutable field
+                  rule: self == oldSelf
               topicID:
                 description: ID of topic
                 type: string
+                x-kubernetes-validations:
+                - message: Immutable field
+                  rule: self == oldSelf
             type: object
           status:
             description: TopicStatus defines the observed state of Topic

@@ -21,6 +21,8 @@ import (
 	"os"
 
 	"cloud.google.com/go/pubsub"
+	"k8s.io/utils/clock"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -106,6 +108,7 @@ func main() {
 		Scheme:    mgr.GetScheme(),
 		NewClient: pubsub.NewClient,
 		Recorder:  mgr.GetEventRecorderFor("subscription-controller"),
+		Clock:     clock.RealClock{},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Subscription")
 		os.Exit(1)

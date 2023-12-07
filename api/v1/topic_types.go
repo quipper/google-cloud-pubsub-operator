@@ -23,9 +23,11 @@ import (
 // TopicSpec defines the desired state of Topic
 type TopicSpec struct {
 	// ID of project
+	//+kubebuilder:validation:XValidation:message="Immutable field",rule="self == oldSelf"
 	ProjectID string `json:"projectID,omitempty"`
 
 	// ID of topic
+	//+kubebuilder:validation:XValidation:message="Immutable field",rule="self == oldSelf"
 	TopicID string `json:"topicID,omitempty"`
 }
 
