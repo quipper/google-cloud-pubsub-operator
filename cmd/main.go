@@ -99,6 +99,7 @@ func main() {
 		Scheme:    mgr.GetScheme(),
 		NewClient: pubsub.NewClient,
 		Recorder:  mgr.GetEventRecorderFor("topic-controller"),
+		Clock:     clock.RealClock{},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Topic")
 		os.Exit(1)

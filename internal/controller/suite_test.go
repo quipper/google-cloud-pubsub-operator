@@ -107,6 +107,8 @@ var _ = BeforeSuite(func() {
 		Scheme:    k8sManager.GetScheme(),
 		NewClient: newClient,
 		Recorder:  k8sManager.GetEventRecorderFor("topic-controller"),
+		// TODO: how to change the time in test code?
+		Clock: clocktesting.NewFakePassiveClock(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
