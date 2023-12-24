@@ -34,6 +34,27 @@ spec:
           spec:
             description: SubscriptionSpec defines the desired state of Subscription
             properties:
+              bindings:
+                description: Authorative IAM Binding for subscription
+                items:
+                  description: IamBinding provides authorative binding of permissions
+                    to for the resource.
+                  properties:
+                    role:
+                      description: Role granted for the service accounts on topic
+                        / subscription level.
+                      example: roles/pubsub.publisher
+                      type: string
+                    serviceAccounts:
+                      description: Service accounts assigned with the role
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - role
+                  - serviceAccounts
+                  type: object
+                type: array
               subscriptionID:
                 description: subscription ID
                 type: string

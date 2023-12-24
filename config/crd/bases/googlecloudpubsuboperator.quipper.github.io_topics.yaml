@@ -34,6 +34,27 @@ spec:
           spec:
             description: TopicSpec defines the desired state of Topic
             properties:
+              bindings:
+                description: Authorative IAM Binding for topic
+                items:
+                  description: IamBinding provides authorative binding of permissions
+                    to for the resource.
+                  properties:
+                    role:
+                      description: Role granted for the service accounts on topic
+                        / subscription level.
+                      example: roles/pubsub.publisher
+                      type: string
+                    serviceAccounts:
+                      description: Service accounts assigned with the role
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - role
+                  - serviceAccounts
+                  type: object
+                type: array
               projectID:
                 description: ID of project
                 type: string

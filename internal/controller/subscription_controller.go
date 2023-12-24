@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"cloud.google.com/go/iam"
 	"cloud.google.com/go/pubsub"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -102,6 +103,14 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if isPubSubAlreadyExistsError(err) {
 			// don't treat as error
 			logger.Info("PubSub subscription already exists")
+
+			// update iam policy
+			if err = r.updateIamPolicy(ctx, subscription.Spec.SubscriptionProjectID, subscription.Spec.SubscriptionID, subscription.Spec.Bindings); err != nil {
+				logger.Error(err, "Unable to update iam policy for topic")
+				return ctrl.Result{}, err
+			}
+			logger.Info("Updated IAM policy for subscription", "id", subscription.Spec.SubscriptionID)
+
 			subscriptionPatch := crclient.MergeFrom(subscription.DeepCopy())
 			subscription.Status.Phase = googlecloudpubsuboperatorv1.SubscriptionStatusPhaseActive
 			if err := r.Client.Status().Patch(ctx, &subscription, subscriptionPatch); err != nil {
@@ -129,6 +138,13 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 	logger.Info(fmt.Sprintf("Subscription created: %v", s.ID()), "subscription", subscription)
+
+	// update iam policy
+	if err = r.updateIamPolicy(ctx, subscription.Spec.SubscriptionProjectID, subscription.Spec.SubscriptionID, subscription.Spec.Bindings); err != nil {
+		logger.Error(err, "Unable to update iam policy for topic")
+		return ctrl.Result{}, err
+	}
+	logger.Info("Updated IAM policy for subscription", "id", s.ID())
 
 	subscriptionPatch := crclient.MergeFrom(subscription.DeepCopy())
 	subscription.Status.Phase = googlecloudpubsuboperatorv1.SubscriptionStatusPhaseActive
@@ -181,6 +197,27 @@ func (r *SubscriptionReconciler) deleteSubscription(ctx context.Context, subscri
 			return nil
 		}
 		return fmt.Errorf("unable to delete subscription: %w", err)
+	}
+	return nil
+}
+
+// updateIamPolicy sets the topic iam policy to match the defined spec, if the bindings are non nil.
+func (r *SubscriptionReconciler) updateIamPolicy(ctx context.Context, projectID, subscriptionID string, bindings []googlecloudpubsuboperatorv1.IamBinding) error {
+	if bindings != nil {
+		c, err := r.NewClient(ctx, projectID)
+		if err != nil {
+			return fmt.Errorf("pubsub.NewClient: %w", err)
+		}
+		defer c.Close()
+
+		policy := &iam.Policy{}
+		for _, bind := range bindings {
+			for _, member := range bind.ServiceAccounts {
+				policy.Add(member, iam.RoleName(bind.Role))
+			}
+		}
+
+		return c.Subscription(subscriptionID).IAM().SetPolicy(ctx, policy)
 	}
 	return nil
 }

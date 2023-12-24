@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/iam"
 	"cloud.google.com/go/pubsub"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -97,6 +98,14 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		if isPubSubAlreadyExistsError(err) {
 			// don't treat as error
 			logger.Info("Topic already exists in Cloud Pub/Sub", "error", err)
+
+			// update iam policy
+			if err = r.updateIamPolicy(ctx, topic.Spec.ProjectID, topic.Spec.TopicID, topic.Spec.Bindings); err != nil {
+				logger.Error(err, "Unable to update iam policy for topic")
+				return ctrl.Result{}, err
+			}
+			logger.Info("Updated IAM policy for topic", "id", topic.Spec.TopicID)
+
 			topicPatch := crclient.MergeFrom(topic.DeepCopy())
 			topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseActive
 			topic.Status.Message = ""
@@ -120,6 +129,13 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 	logger.Info("Created topic into Cloud Pub/Sub", "id", t.ID())
+
+	// update iam policy
+	if err = r.updateIamPolicy(ctx, topic.Spec.ProjectID, topic.Spec.TopicID, topic.Spec.Bindings); err != nil {
+		logger.Error(err, "Unable to update iam policy for topic")
+		return ctrl.Result{}, err
+	}
+	logger.Info("Updated IAM policy for topic", "id", t.ID())
 
 	topicPatch := crclient.MergeFrom(topic.DeepCopy())
 	topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseActive
@@ -168,5 +184,27 @@ func (r *TopicReconciler) deleteTopic(ctx context.Context, projectID, topicID st
 		}
 		return fmt.Errorf("unable to delete topic %s: %w", topicID, err)
 	}
+	return nil
+}
+
+// updateIamPolicy sets the topic iam policy to match the defined spec, if the bindings are non nil.
+func (r *TopicReconciler) updateIamPolicy(ctx context.Context, projectID, topicID string, bindings []googlecloudpubsuboperatorv1.IamBinding) error {
+	if bindings != nil {
+		c, err := r.NewClient(ctx, projectID)
+		if err != nil {
+			return fmt.Errorf("pubsub.NewClient: %w", err)
+		}
+		defer c.Close()
+
+		policy := &iam.Policy{}
+		for _, bind := range bindings {
+			for _, member := range bind.ServiceAccounts {
+				policy.Add(member, iam.RoleName(bind.Role))
+			}
+		}
+
+		return c.Topic(topicID).IAM().SetPolicy(ctx, policy)
+	}
+
 	return nil
 }

@@ -37,6 +37,10 @@ type SubscriptionSpec struct {
 	// project ID of topic
 	//+kubebuilder:validation:XValidation:message="Immutable field",rule="self == oldSelf"
 	TopicProjectID string `json:"topicProjectID,omitempty"`
+
+	// Authorative IAM Binding for subscription
+	//+kubebuilder:validation:Optional
+	Bindings []IamBinding `json:"bindings,omitempty"`
 }
 
 // SubscriptionStatus defines the observed state of Subscription

@@ -29,6 +29,10 @@ type TopicSpec struct {
 	// ID of topic
 	//+kubebuilder:validation:XValidation:message="Immutable field",rule="self == oldSelf"
 	TopicID string `json:"topicID,omitempty"`
+
+	// Authorative IAM Binding for topic
+	//+kubebuilder:validation:Optional
+	Bindings []IamBinding `json:"bindings,omitempty"`
 }
 
 // TopicStatus defines the observed state of Topic
