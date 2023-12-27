@@ -19,11 +19,13 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -38,9 +40,12 @@ type TopicReconciler struct {
 	Scheme    *runtime.Scheme
 	NewClient newPubSubClientFunc
 	Recorder  record.EventRecorder
+	Clock     clock.PassiveClock
 }
 
 const topicFinalizerName = "topic.googlecloudpubsuboperator.quipper.github.io/finalizer"
+
+const topicCreationWarningDeadline = 10 * time.Minute
 
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=googlecloudpubsuboperator.quipper.github.io,resources=topics/status,verbs=get;update;patch
@@ -108,8 +113,13 @@ func (r *TopicReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, nil
 		}
 
-		r.Recorder.Event(&topic, corev1.EventTypeWarning, "TopicCreateError",
-			fmt.Sprintf("Failed to create Topic in Pub/Sub: %s", err))
+		if r.Clock.Since(topic.CreationTimestamp.Time) > topicCreationWarningDeadline {
+			r.Recorder.Event(&topic, corev1.EventTypeWarning, "TopicCreateErrorDeadlineExceeded",
+				fmt.Sprintf("Failed to create Topic for %s in Pub/Sub: %s", topicCreationWarningDeadline, err))
+		} else {
+			r.Recorder.Event(&topic, corev1.EventTypeNormal, "TopicCreateError",
+				fmt.Sprintf("Failed to create Topic in Pub/Sub: %s", err))
+		}
 		topicPatch := crclient.MergeFrom(topic.DeepCopy())
 		topic.Status.Phase = googlecloudpubsuboperatorv1.TopicStatusPhaseError
 		topic.Status.Message = fmt.Sprintf("Pub/Sub error: %s", err)
