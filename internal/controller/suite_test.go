@@ -18,8 +18,10 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
 	"unsafe"
@@ -66,6 +68,14 @@ var _ = BeforeSuite(func() {
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
+
+		// The BinaryAssetsDirectory is only required if you want to run the tests directly
+		// without call the makefile target test. If not informed it will look for the
+		// default path defined in controller-runtime which is /usr/local/kubebuilder/.
+		// Note that you must have the required binaries setup under the bin directory to perform
+		// the tests directly. When we run make test it will be setup and used automatically.
+		BinaryAssetsDirectory: filepath.Join("..", "..", "bin", "k8s",
+			fmt.Sprintf("1.28.3-%s-%s", runtime.GOOS, runtime.GOARCH)),
 	}
 
 	ctx, cancel := context.WithCancel(context.TODO())
@@ -126,6 +136,8 @@ var _ = BeforeSuite(func() {
 		Scheme:    k8sManager.GetScheme(),
 		NewClient: newClient,
 		Recorder:  k8sManager.GetEventRecorderFor("topic-controller"),
+		// TODO: how to change the time in test code?
+		Clock: clocktesting.NewFakePassiveClock(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
