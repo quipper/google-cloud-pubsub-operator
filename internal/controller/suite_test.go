@@ -61,6 +61,15 @@ func TestControllers(t *testing.T) {
 	RunSpecs(t, "Controller Suite")
 }
 
+func TestGetInternalGrpcServer(t *testing.T) {
+	psServer := pstest.NewServer()
+	gSrv := getInternalGrpcServer(psServer)
+	sInfo := gSrv.GetServiceInfo()
+	if sInfo == nil {
+		t.Error("failed to get grpc server info")
+	}
+}
+
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
@@ -109,15 +118,7 @@ var _ = BeforeSuite(func() {
 		pubsubtest.CreateTopicErrorInjectionReactor(),
 	)
 
-	// try to get access to `Gsrv` thru `*testutil.Server`, that's on first field of `pstest.Server`
-	rs := reflect.ValueOf(psServer).Elem()
-
-	// *testutil.Server
-	tsrv := rs.Field(0)
-	tsrv = reflect.NewAt(tsrv.Type(), unsafe.Pointer(tsrv.UnsafeAddr())).Elem()
-
-	// *grpc.Server is found from the exported field `Gsrv`
-	gsrv := reflect.Indirect(tsrv).FieldByName("Gsrv").Interface().(*grpc.Server)
+	gsrv := getInternalGrpcServer(psServer)
 
 	// trying to register fake iam policy server
 	// this fails randomly because Registering is not possible after `grsv.Serve()` is called.
@@ -157,3 +158,17 @@ var _ = BeforeSuite(func() {
 		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
 	}()
 })
+
+// getInternalGrpcServer uses reflection to receive pointer to the internal grpc.Server located in the psutil.Server.
+// This reference can be used to register additional fake servers.
+func getInternalGrpcServer(psServer *pstest.Server) *grpc.Server {
+	// try to get access to `Gsrv` thru `*testutil.Server`, that's on first field of `pstest.Server`
+	rs := reflect.ValueOf(psServer).Elem()
+
+	// *testutil.Server
+	tsrv := rs.Field(0)
+	tsrv = reflect.NewAt(tsrv.Type(), unsafe.Pointer(tsrv.UnsafeAddr())).Elem()
+
+	// *grpc.Server is found from the exported field `Gsrv`
+	return reflect.Indirect(tsrv).FieldByName("Gsrv").Interface().(*grpc.Server)
+}
