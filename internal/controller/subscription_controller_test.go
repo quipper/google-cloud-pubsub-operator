@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"cloud.google.com/go/iam"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	googlecloudpubsuboperatorv1 "github.com/quipper/google-cloud-pubsub-operator/api/v1"
@@ -49,6 +50,61 @@ var _ = Describe("Subscription controller", func() {
 				subscriptionExists, err := psClient.Subscription("my-subscription").Exists(ctx)
 				g.Expect(err).ShouldNot(HaveOccurred())
 				g.Expect(subscriptionExists).Should(BeTrue())
+			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
+		})
+
+		It("Should create a Pub/Sub Subscription with IAM Binding", func(ctx context.Context) {
+			const projectID = "subscription-project-1"
+			const subscriptionID = "my-subscription-with-iam"
+			psClient, err := pubsubtest.NewClient(ctx, projectID, psServer)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Creating a Topic")
+			topicID := "my-topic-2"
+			_, err = psClient.CreateTopic(ctx, topicID)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Creating a Subscription")
+			subscription := &googlecloudpubsuboperatorv1.Subscription{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "googlecloudpubsuboperator.quipper.github.io/v1",
+					Kind:       "Subscription",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "example-",
+					Namespace:    "default",
+				},
+				Spec: googlecloudpubsuboperatorv1.SubscriptionSpec{
+					SubscriptionProjectID: projectID,
+					SubscriptionID:        subscriptionID,
+					TopicProjectID:        projectID,
+					TopicID:               topicID,
+					Bindings: []googlecloudpubsuboperatorv1.IamBinding{
+						{
+							Role: "roles/pubsub.consumer",
+							ServiceAccounts: []string{
+								"my-app-1@subscription-project-1.iam.gserviceaccount.com",
+							},
+						},
+					},
+				},
+			}
+			Expect(k8sClient.Create(ctx, subscription)).Should(Succeed())
+
+			By("Checking if the Subscription exists")
+			Eventually(func(g Gomega) {
+				sub := psClient.Subscription(subscriptionID)
+				subscriptionExists, err := sub.Exists(ctx)
+				g.Expect(err).ShouldNot(HaveOccurred())
+				g.Expect(subscriptionExists).Should(BeTrue())
+
+				policy, err := sub.IAM().Policy(ctx)
+				g.Expect(err).ShouldNot(HaveOccurred())
+
+				consumers := policy.Members(iam.RoleName("roles/pubsub.consumer"))
+				g.Expect(consumers).Should(ContainElement("my-app-1@subscription-project-1.iam.gserviceaccount.com"))
+				g.Expect(consumers).Should(HaveLen(1))
+
 			}, 3*time.Second, 100*time.Millisecond).Should(Succeed())
 		})
 
