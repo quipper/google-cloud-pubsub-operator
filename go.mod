@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.23.2
 
 require (
-	cloud.google.com/go/iam v1.2.1
+	cloud.google.com/go/iam v1.2.2
 	cloud.google.com/go/pubsub v1.45.0
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.2
