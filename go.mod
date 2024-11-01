@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/iam v1.2.2
 	cloud.google.com/go/pubsub v1.45.1
 	github.com/onsi/ginkgo/v2 v2.21.0
-	github.com/onsi/gomega v1.35.0
+	github.com/onsi/gomega v1.35.1
 	google.golang.org/api v0.203.0
 	google.golang.org/grpc v1.67.1
 	k8s.io/api v0.31.2
