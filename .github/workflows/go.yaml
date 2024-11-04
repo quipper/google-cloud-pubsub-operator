@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/go.yaml
+      - Makefile
       - '**.go'
       - go.*
   push:
@@ -11,6 +12,7 @@ on:
       - main
     paths:
       - .github/workflows/go.yaml
+      - Makefile
       - '**.go'
       - go.*
 
