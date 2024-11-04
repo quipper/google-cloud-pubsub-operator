@@ -15,31 +15,6 @@ rules:
   - googlecloudpubsuboperator.quipper.github.io
   resources:
   - subscriptions
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - googlecloudpubsuboperator.quipper.github.io
-  resources:
-  - subscriptions/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - googlecloudpubsuboperator.quipper.github.io
-  resources:
-  - subscriptions/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - googlecloudpubsuboperator.quipper.github.io
-  resources:
   - topics
   verbs:
   - create
@@ -52,12 +27,14 @@ rules:
 - apiGroups:
   - googlecloudpubsuboperator.quipper.github.io
   resources:
+  - subscriptions/finalizers
   - topics/finalizers
   verbs:
   - update
 - apiGroups:
   - googlecloudpubsuboperator.quipper.github.io
   resources:
+  - subscriptions/status
   - topics/status
   verbs:
   - get
