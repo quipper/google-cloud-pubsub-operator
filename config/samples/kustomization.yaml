@@ -2,4 +2,4 @@
 resources:
 - googlecloudpubsuboperator_v1_topic.yaml
 - googlecloudpubsuboperator_v1_subscription.yaml
-#+kubebuilder:scaffold:manifestskustomizesamples
+# +kubebuilder:scaffold:manifestskustomizesamples
