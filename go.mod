@@ -2,7 +2,7 @@ module github.com/quipper/google-cloud-pubsub-operator
 
 go 1.22.0
 
-toolchain go1.22.5
+toolchain go1.23.2
 
 require (
 	cloud.google.com/go/iam v1.2.2
