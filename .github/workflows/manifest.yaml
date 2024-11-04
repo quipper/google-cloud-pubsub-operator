@@ -3,8 +3,9 @@ name: manifest
 on:
   pull_request:
     paths:
-      - config/**
       - .github/workflows/manifest.yaml
+      - Makefile
+      - config/**
 
 jobs:
   manifest:

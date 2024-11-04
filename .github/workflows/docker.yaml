@@ -8,10 +8,9 @@ on:
       - .github/workflows/docker.yaml
       - Dockerfile
       - go.*
-      - main.go
+      - cmd/**
       - api/**
-      - controllers/**
-      - pkg/**
+      - internal/**
     tags:
       - v*
   pull_request:
@@ -19,10 +18,9 @@ on:
       - .github/workflows/docker.yaml
       - Dockerfile
       - go.*
-      - main.go
+      - cmd/**
       - api/**
-      - controllers/**
-      - pkg/**
+      - internal/**
 
 jobs:
   build:
