@@ -5,7 +5,7 @@ go 1.22.5
 require (
 	cloud.google.com/go/iam v1.2.2
 	cloud.google.com/go/pubsub v1.45.1
-	github.com/onsi/ginkgo/v2 v2.21.0
+	github.com/onsi/ginkgo/v2 v2.22.0
 	github.com/onsi/gomega v1.35.1
 	google.golang.org/api v0.207.0
 	google.golang.org/grpc v1.67.1
