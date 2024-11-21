@@ -9,9 +9,9 @@ require (
 	github.com/onsi/gomega v1.35.1
 	google.golang.org/api v0.207.0
 	google.golang.org/grpc v1.67.1
-	k8s.io/api v0.31.2
-	k8s.io/apimachinery v0.31.2
-	k8s.io/client-go v0.31.2
+	k8s.io/api v0.31.3
+	k8s.io/apimachinery v0.31.3
+	k8s.io/client-go v0.31.3
 	k8s.io/utils v0.0.0-20241104163129-6fe5fd82f078
 	sigs.k8s.io/controller-runtime v0.19.1
 )
