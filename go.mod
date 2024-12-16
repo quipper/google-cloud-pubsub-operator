@@ -9,7 +9,7 @@ require (
 	cloud.google.com/go/pubsub v1.45.3
 	github.com/onsi/ginkgo/v2 v2.22.0
 	github.com/onsi/gomega v1.36.1
-	google.golang.org/api v0.211.0
+	google.golang.org/api v0.212.0
 	google.golang.org/grpc v1.69.0
 	k8s.io/api v0.32.0
 	k8s.io/apimachinery v0.32.0
@@ -20,9 +20,9 @@ require (
 
 require (
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.12.1 // indirect
+	cloud.google.com/go/auth v0.13.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
-	cloud.google.com/go/compute/metadata v0.5.2 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -84,7 +84,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
