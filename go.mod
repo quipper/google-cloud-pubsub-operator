@@ -6,7 +6,7 @@ toolchain go1.23.5
 
 require (
 	cloud.google.com/go/iam v1.3.1
-	cloud.google.com/go/pubsub v1.46.0
+	cloud.google.com/go/pubsub v1.47.0
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
 	google.golang.org/api v0.219.0
@@ -20,7 +20,7 @@ require (
 
 require (
 	cel.dev/expr v0.19.0 // indirect
-	cloud.google.com/go v0.118.0 // indirect
+	cloud.google.com/go v0.118.1 // indirect
 	cloud.google.com/go/auth v0.14.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.7 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
@@ -44,7 +44,6 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/cel-go v0.22.0 // indirect
