@@ -7,7 +7,7 @@ toolchain go1.23.6
 require (
 	cloud.google.com/go/iam v1.4.2
 	cloud.google.com/go/pubsub v1.48.0
-	github.com/onsi/ginkgo/v2 v2.23.1
+	github.com/onsi/ginkgo/v2 v2.23.2
 	github.com/onsi/gomega v1.36.2
 	google.golang.org/api v0.227.0
 	google.golang.org/grpc v1.71.0
