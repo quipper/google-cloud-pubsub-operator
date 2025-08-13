@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/iam/apiv1/iampb"
-	"cloud.google.com/go/pubsub"
-	"cloud.google.com/go/pubsub/pstest"
+	"cloud.google.com/go/pubsub/v2"
+	"cloud.google.com/go/pubsub/v2/pstest"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/quipper/google-cloud-pubsub-operator/internal/pubsubtest"
