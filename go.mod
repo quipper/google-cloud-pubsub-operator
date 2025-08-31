@@ -7,8 +7,8 @@ toolchain go1.23.6
 require (
 	cloud.google.com/go/iam v1.5.2
 	cloud.google.com/go/pubsub v1.49.0
-	github.com/onsi/ginkgo/v2 v2.25.1
-	github.com/onsi/gomega v1.38.0
+	github.com/onsi/ginkgo/v2 v2.25.2
+	github.com/onsi/gomega v1.38.2
 	google.golang.org/api v0.248.0
 	google.golang.org/grpc v1.75.0
 	k8s.io/api v0.32.4
@@ -24,7 +24,7 @@ require (
 	cloud.google.com/go/auth v0.16.5 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.8.0 // indirect
-	github.com/Masterminds/semver/v3 v3.3.1 // indirect
+	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -88,6 +88,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/net v0.43.0 // indirect
