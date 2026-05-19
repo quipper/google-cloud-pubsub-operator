@@ -10,7 +10,7 @@ This operator allows you to manage Pub/Sub resources within your Kubernetes clus
 To install this operator,
 
 ```sh
-kubectl apply -f https://github.com/quipper/google-cloud-pubsub-operator/releases/download/v0.11.0/google-cloud-pubsub-operator.yaml
+kubectl apply -f https://github.com/quipper/google-cloud-pubsub-operator/releases/download/v0.12.0/google-cloud-pubsub-operator.yaml
 ```
 
 ## Usage
