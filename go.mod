@@ -1,8 +1,6 @@
 module github.com/quipper/google-cloud-pubsub-operator
 
-go 1.23.0
-
-toolchain go1.23.6
+go 1.25
 
 require (
 	cloud.google.com/go/iam v1.5.2
@@ -14,7 +12,7 @@ require (
 	k8s.io/api v0.32.4
 	k8s.io/apimachinery v0.32.4
 	k8s.io/client-go v0.32.4
-	k8s.io/utils v0.0.0-20260507154919-ff6756f316d2
+	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
 	sigs.k8s.io/controller-runtime v0.20.4
 )
 
