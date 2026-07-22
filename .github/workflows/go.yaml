@@ -29,7 +29,7 @@ jobs:
       - run: go mod tidy
       - run: make fmt
       - run: make generate manifests
-      - uses: int128/update-generated-files-action@f6dc44e35ce252932e9018f1c38d1e2a4ff80e14 # v2.60.0
+      - uses: int128/update-generated-files-action@0d0a67cf2f8a8b7bc10c1c2ea5dffdad291b5b47 # v2.102.0
 
   test:
     runs-on: ubuntu-latest
